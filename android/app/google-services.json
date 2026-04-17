@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "833220707207",
+    "project_id": "naturats-c1d0e",
+    "storage_bucket": "naturats-c1d0e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:833220707207:android:dcf58dac6662ceb735c922",
+        "android_client_info": {
+          "package_name": "br.uff.naturats"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBu277E88fbMBiWU1OUDe8YFena32Xo1Qk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
