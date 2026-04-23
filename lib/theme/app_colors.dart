@@ -9,6 +9,7 @@ class AppColors {
   static const Color branco = Color(0xFFFFFFFF);
   static const Color bgCinza = Color(0xFFD9D9D9);
   static const Color borderCinza = Color(0xFF4A4A4A);
+  static const Color textCinza = Color.fromARGB(255, 114, 114, 114);
   
   // Rank
   static const Color ouro = Color(0xFFFABA42);
@@ -23,6 +24,12 @@ class AppColors {
   static const Color semanalRoxo = Color(0xFFB884F8);
   static const Color mensalAmarelo = Color(0xFFFABA42); // Reutilizando a cor ouro
 
+  static const Color agua = Color(0xFF2E7CFA);
+  static const Color energia = Color.fromARGB(255, 244, 202, 17);
+  static const Color residuos = Color(0xFF5ABEA1);
+  static const Color mobilidade = Color(0xFF7B6FD0);
+  static const Color biodiversidade = Color(0xFF32AD5B);
+  
   // Estatísticas
   static const Color statCo2 = Color(0xFF01844B);
   static const Color staAgua = Color(0xFF15A1E6);
