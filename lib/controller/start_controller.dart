@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:naturats/controller/login_controller.dart';
 import 'package:naturats/repository/user_repository.dart';
 import 'package:naturats/view/login_page.dart';
 import 'package:naturats/view/splash_page.dart';
