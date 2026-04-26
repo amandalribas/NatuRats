@@ -14,6 +14,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "833220707207-2br3tvqi7hi4qklg5m5skl5f4g06pm61.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.uff.naturats",
+            "certificate_hash": "5372e3b6f2cfdfa8f7eec8e135aa49edc79f0704"
+          }
+        },
+        {
+          "client_id": "833220707207-arn308158f8krmbuamvca67ibdoohjq1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.uff.naturats",
+            "certificate_hash": "ade35f4c76cb6aa69d71dd2fcc744ec636a214c6"
+          }
+        },
+        {
           "client_id": "833220707207-hjk32chpe4ki4p84gspm102odg05cr80.apps.googleusercontent.com",
           "client_type": 3
         }

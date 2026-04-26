@@ -10,6 +10,7 @@ class UserRepository extends ChangeNotifier {
   User? currentUser;
   bool isSignedIn = false;
   bool isLoading = true;
+  String? profilePictureUrl;
 
   UserRepository() {
     _initialize();
@@ -37,12 +38,14 @@ class UserRepository extends ChangeNotifier {
     await _authService.signOut();
     currentUser = null;
     isSignedIn = false;
+    profilePictureUrl = null;
     notifyListeners();
   }
 
   Future<void> _getCurrentUserInfo() async {
     final fbAuthUser = _authService.getFirebaseAuthUser();
     User? user = await _userService.get(fbAuthUser!.uid);
+    profilePictureUrl = fbAuthUser.photoURL;
 
     if (user == null) {
       await _createUser(
@@ -77,5 +80,13 @@ class UserRepository extends ChangeNotifier {
 
     final index = name?.indexOf(' ');
     return index == -1 ? name : name?.substring(0, index);
+  }
+
+  String? getFullName() {
+    return currentUser?.name;
+  }
+
+  String? getProfilePictureUrl() {
+    return profilePictureUrl;
   }
 }

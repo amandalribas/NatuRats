@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'home_page.dart';
+import 'package:naturats/view/challenge_page.dart';
+import 'package:naturats/view/groups_page.dart';
+import 'package:naturats/view/profile_page.dart';
 
 class TabsPage extends StatelessWidget {
   const TabsPage({super.key});
@@ -9,9 +12,9 @@ class TabsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final pages = [
       const HomePage(),
-      const HomePage(),
-      const HomePage(),
-      const HomePage(),
+      const ChallengeScreen(),
+      const GroupPage(),
+      const ProfilePage(),
     ].whereType<Widget>().toList();
 
     final tabs = [
