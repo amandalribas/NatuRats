@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/controller/home_controller.dart';
-import 'package:naturats/shared/components/progress_box.dart';
 import 'package:provider/provider.dart';
-import '../shared/components/statistic_box.dart';
+import '../components/home/progress_box.dart';
+import '../components/home/statistic_box.dart';
 import '../theme/app_colors.dart';
 
 class HomePage extends StatelessWidget {
