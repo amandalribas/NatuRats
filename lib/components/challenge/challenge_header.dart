@@ -11,7 +11,7 @@ class ChallengeHeader extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(color: AppColors.bgVerde),
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 40, 20, 20),
+        padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -24,6 +24,7 @@ class ChallengeHeader extends StatelessWidget {
                 fontSize: 26,
               ),
             ),
+            SizedBox(height: 5),
             Text(
               "Clique em um desafio de interesse para saber mais e adicionar ao seu perfil.",
               style: TextStyle(

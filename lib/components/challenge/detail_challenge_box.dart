@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/category_tag.dart';
-import 'package:naturats/model/category_model.dart';
-import 'package:naturats/model/sub_category_model.dart';
+import 'package:naturats/model/challenge_duration.dart';
+import 'package:naturats/model/challenge_type.dart';
 import 'package:naturats/theme/app_colors.dart';
 
 class DetailChallengeBox extends StatelessWidget {
   final String title;
   final String descr;
-  final CategoryModel category;
-  final SubCategoryModel subcategory;
+  final ChallengeDuration duration;
+  final ChallengeType type;
 
   const DetailChallengeBox({
     super.key,
     required this.title,
     required this.descr,
-    required this.category,
-    required this.subcategory,
+    required this.duration,
+    required this.type,
   });
 
   @override
@@ -39,11 +39,11 @@ class DetailChallengeBox extends StatelessWidget {
                   height: 80,
                   width: 80,
                   decoration: BoxDecoration(
-                    color: subcategory.color,
+                    color: type.color,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
-                    subcategory.icon,
+                    type.icon,
                     size: 40,
                     color: AppColors.preto,
                   ),
@@ -67,9 +67,9 @@ class DetailChallengeBox extends StatelessWidget {
                       // --- TAGS DE CATEGORIA E SUB CATEGORIA ---
                       Row(
                         children: [
-                          CategoryTag(category: category),
+                          CategoryTag(category: duration),
                           const SizedBox(width: 4), // Espaço entre as tags
-                          CategoryTag(category: subcategory),
+                          CategoryTag(category: type),
                         ],
                       ),
                     ],
@@ -110,7 +110,7 @@ class DetailChallengeBox extends StatelessWidget {
                 height: 70,
                 child: ElevatedButton(
                   onPressed: () {
-                    print("Clicou em adicionar desafio");
+                    debugPrint("Clicou em adicionar desafio");
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.buttomVerde,

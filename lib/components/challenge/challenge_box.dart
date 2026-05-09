@@ -1,27 +1,16 @@
-
 import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/category_tag.dart';
-import 'package:naturats/components/challenge/detail_challenge_box.dart';
-import 'package:naturats/model/category_model.dart';
-import 'package:naturats/model/sub_category_model.dart';
+import 'package:naturats/model/challenge.dart';
 import 'package:naturats/theme/app_colors.dart';
 
-
-
 class ChallengeBox extends StatelessWidget {
-  final String title;
-  final String descr;
-  final CategoryModel category;
-  final SubCategoryModel subcategory;
-  final VoidCallback? onTap;
+  final Challenge challenge;
+  final VoidCallback onTap;
 
   const ChallengeBox({
     super.key,
-    required this.title,
-    required this.descr,
-    required this.category,
-    required this.subcategory,
-    this.onTap,
+    required this.challenge,
+    required this.onTap,
   });
 
   @override
@@ -30,7 +19,7 @@ class ChallengeBox extends StatelessWidget {
       //height: 110,
       constraints: const BoxConstraints(minHeight: 120),
       width: double.infinity, // Ocupa a largura disponível
-      margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+      margin: const EdgeInsets.fromLTRB(2,0,2,15),
       decoration: BoxDecoration(
         color: AppColors.branco,
         borderRadius: BorderRadius.circular(25),
@@ -50,21 +39,7 @@ class ChallengeBox extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(25),
-          onTap:
-              onTap ??
-              () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>  DetailChallengeBox(
-                      title: title,
-                      descr: descr,
-                      category: category,
-                      subcategory: subcategory,
-                    ),
-                  ),
-                );
-              },
+          onTap: onTap,
           child: Padding(
             //padding: const EdgeInsets.all(16),
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -77,11 +52,11 @@ class ChallengeBox extends StatelessWidget {
                   width: 65,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: subcategory.color,
+                    color: challenge.type.color,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
-                    subcategory.icon,
+                    challenge.type.icon,
                     color: AppColors.preto,
                     size: 32,
                   ),
@@ -93,7 +68,7 @@ class ChallengeBox extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        title,
+                        challenge.title,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -102,7 +77,7 @@ class ChallengeBox extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        descr,
+                        challenge.description,
                         style: TextStyle(
                           fontSize: 13,
                           color: AppColors.borderCinza,
@@ -112,8 +87,8 @@ class ChallengeBox extends StatelessWidget {
                       ),
                       Row(
                         children: [
-                          CategoryTag(category: category),
-                          CategoryTag(category: subcategory),
+                          CategoryTag(category: challenge.duration),
+                          CategoryTag(category: challenge.type),
                         ],
                       ),
                     ],

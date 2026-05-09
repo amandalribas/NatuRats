@@ -1,66 +1,36 @@
+import 'package:naturats/model/challenge_duration.dart';
+import 'package:naturats/model/challenge_type.dart';
+
 class Challenge {
   String id;
   String title;
   String description;
-  int points;
-  Difficulty difficulty;
-  Duration duration;
+  String details;
+  List<String> info;
+  ChallengeType type;
+  ChallengeDuration duration;
+  Map<String,dynamic>? statistics;
 
   Challenge({
     required this.id,
     required this.title,
     required this.description,
-    required this.points,
-    required this.difficulty,
-    required this.duration
+    required this.details,
+    required this.info,
+    required this.type,
+    required this.duration,
+    this.statistics
   });
 
   factory Challenge.fromMap(String id, Map<String, dynamic> map) {
     return Challenge(
       id: id,
-      title: map["title"],
-      description: map["description"],
-      points: map["points"],
-      difficulty: difficultyFromMap(map["difficulty"]),
-      duration: durationFromMap(map["duration"])
+      title: map["title"] ?? "NULL",
+      description: map["description"] ?? "NULL",
+      details: map["details"] ?? "NULL",
+      info: List<String>.from(map["info"] ?? []),
+      type: ChallengeType.fromMap(map["type"] ?? "NULL"),
+      duration: ChallengeDuration.fromMap(map["duration"] ?? "")
     );
-  }
-}
-
-enum Difficulty {
-  easy,
-  medium,
-  hard
-}
-
-Difficulty difficultyFromMap(String difficulty) {
-  switch (difficulty) {
-    case "easy":
-      return Difficulty.easy;
-    case "medium":
-      return Difficulty.medium;
-    case "hard":
-      return Difficulty.hard;
-    default:
-      return Difficulty.easy;
-  }
-}
-
-enum Duration {
-  daily,
-  weekly,
-  monthly
-}
-
-Duration durationFromMap(String duration) {
-  switch (duration) {
-    case "daily":
-      return Duration.daily;
-    case "weekly":
-      return Duration.weekly;
-    case "monthly":
-      return Duration.monthly;
-    default:
-      return Duration.daily;
   }
 }

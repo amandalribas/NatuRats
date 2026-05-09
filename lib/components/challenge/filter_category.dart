@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:naturats/model/category_class.dart';
+import 'package:naturats/model/category.dart';
 import 'package:naturats/theme/app_colors.dart';
 
 class FilterCategory extends StatelessWidget {
   final VoidCallback onTap;
-
   final bool isSelected;
-
   final Category category;
 
   const FilterCategory({
