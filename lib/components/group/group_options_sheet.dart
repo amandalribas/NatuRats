@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:naturats/view/group_form_page.dart';
 
 class GroupOptionsSheet extends StatelessWidget {
   const GroupOptionsSheet({super.key});
@@ -22,7 +23,12 @@ class GroupOptionsSheet extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.group_add),
             title: const Text("Criar novo grupo"),
-            onTap: () => Navigator.pop(context),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GroupFormPage(),
+              ),
+            ),
           ),
         ],
       ),

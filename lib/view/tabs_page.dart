@@ -13,7 +13,7 @@ class TabsPage extends StatelessWidget {
     final pages = [
       const HomePage(),
       const ChallengeScreen(),
-      const GroupPage(),
+      GroupPage(),
       const ProfilePage(),
     ].whereType<Widget>().toList();
 

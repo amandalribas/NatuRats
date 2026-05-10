@@ -1,27 +1,22 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:naturats/model/group_model.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/group_detail_page.dart';
 
-class Group extends StatelessWidget {
-  final String id;
-  final String name;
-  final String description;
-  final int totalPeople;
-  final int totalPoints;
-  final String imageUrl;
+class GroupCard extends StatelessWidget {
+  final GroupModel group;
 
-  const Group({
+  const GroupCard({
     super.key,
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.totalPeople,
-    required this.totalPoints,
-    required this.imageUrl,
+    required this.group,
   });
 
   @override
   Widget build(BuildContext context) {
+    final imageBytes = _decodeBase64Image(group.image);
+
     return Center(
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
@@ -30,12 +25,12 @@ class Group extends StatelessWidget {
             context,
             MaterialPageRoute(
               builder: (context) => GroupDetailPage(
-                id: id,
-                name: name,
-                description: description,
-                totalPeople: totalPeople,
-                totalPoints: totalPoints,
-                imageUrl: imageUrl,
+                id: group.id,
+                name: group.name,
+                description: group.description,
+                totalPeople: group.totalPeople,
+                totalPoints: group.totalPoints,
+                imageUrl: group.image,
               ),
             ),
           );
@@ -63,12 +58,20 @@ class Group extends StatelessWidget {
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(20),
                 ),
-                child: Image.network(
-                  imageUrl,
-                  height: 130,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
+                child: imageBytes != null
+                    ? Image.memory(
+                        imageBytes,
+                        height: 130,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        height: 130,
+                        width: double.infinity,
+                        color: AppColors.borderCinza.withOpacity(0.15),
+                        alignment: Alignment.center,
+                        child: const Icon(Icons.image_outlined),
+                      ),
               ),
 
               Padding(
@@ -77,7 +80,7 @@ class Group extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      name,
+                      group.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
@@ -87,7 +90,7 @@ class Group extends StatelessWidget {
                     const SizedBox(height: 4),
 
                     Text(
-                      description,
+                      group.description,
                       style: TextStyle(color: AppColors.borderCinza),
                     ),
 
@@ -95,9 +98,9 @@ class Group extends StatelessWidget {
 
                     Row(
                       children: [
-                        _buildInfoItem(Icons.people_outline, totalPeople),
+                        _buildInfoItem(Icons.people_outline, group.totalPeople),
                         const SizedBox(width: 20),
-                        _buildInfoItem(Icons.emoji_events_outlined, totalPoints),
+                        _buildInfoItem(Icons.emoji_events_outlined, group.totalPoints),
                       ],
                     ),
                   ],
@@ -123,5 +126,19 @@ class Group extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Uint8List? _decodeBase64Image(String value) {
+    if (value.isEmpty) {
+      return null;
+    }
+
+    final normalizedValue = value.contains(',') ? value.split(',').last : value;
+
+    try {
+      return base64Decode(normalizedValue);
+    } catch (_) {
+      return null;
+    }
   }
 }
