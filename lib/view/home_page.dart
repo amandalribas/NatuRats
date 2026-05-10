@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:naturats/components/challenge/challenges_list.dart';
+import 'package:naturats/components/home/home_header.dart';
 import 'package:naturats/controller/home_controller.dart';
 import 'package:provider/provider.dart';
-import '../components/challenge/challenge_box.dart';
-import '../components/home/progress_box.dart';
-import '../components/home/statistic_box.dart';
 import '../theme/app_colors.dart';
 
 class HomePage extends StatelessWidget {
@@ -25,68 +24,12 @@ class _HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HomeController>(
       builder: (context, controller, child) {
-        final activeChallenges = controller.activeChallenges;
-
         return Scaffold(
           backgroundColor: AppColors.bgCinza,
           body: Column(
             children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-                color: AppColors.bgVerde,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Olá, ${controller.name}!",
-                          style: const TextStyle(
-                            color: AppColors.branco,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        IconButton(
-                            onPressed: null,
-                            icon: const Icon(
-                              Icons.info_outline,
-                              color: AppColors.branco,
-                              size: 25,
-                            )
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      "Continue fazendo a diferença",
-                      style: TextStyle(
-                        color: AppColors.branco,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Column(
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(child: StatisticBox(title: "Nível", value: 12)),
-                            const SizedBox(width: 10),
-                            Expanded(child: StatisticBox(title: "Pontos", value: 2450)),
-                            const SizedBox(width: 10),
-                            Expanded(child: StatisticBox(title: "Sequência", value: 16)),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        ProgressBox(nextLevel: 3, currentPoints: 2450, totalPoints: 3000),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              Container(
+              HomePageHeader(name: controller.firstName!),
+              SizedBox(
                 width: double.infinity,
                 child: const Padding(
                   padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
@@ -99,29 +42,13 @@ class _HomeView extends StatelessWidget {
                   ),
                 ),
               ),
-              Expanded(
-                child: controller.loading
-                    ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-                    : activeChallenges!.isEmpty
-                    ? const Center(
-                  child: Text("Nenhum desafio encontrado"),
-                )
-                    : ListView.builder(
-                  itemCount: activeChallenges.length,
-                  itemBuilder: (context, index) {
-                    final challenge =
-                    activeChallenges[index];
-                    return ChallengeBox(
-                      challenge: challenge,
-                      onTap: () {
-                        // TODO
-                      },
-                    );
+              ChallengesListWidget(
+                  onTap: (challenge) {
+                    // TODO
                   },
-                ),
-              ),
+                  challenges: controller.activeChallenges,
+                  loading: controller.loading
+              )
             ],
           ),
         );

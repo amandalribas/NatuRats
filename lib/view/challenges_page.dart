@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:naturats/components/challenge/challenge_box.dart';
 import 'package:naturats/components/challenge/challenge_header.dart';
+import 'package:naturats/components/challenge/challenges_list.dart';
 import 'package:naturats/components/challenge/filter_box.dart';
 import 'package:naturats/controller/challenges_controller.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:provider/provider.dart';
-
-import '../model/challenge.dart';
 
 class ChallengesPage extends StatelessWidget {
   const ChallengesPage({super.key});
@@ -27,8 +25,6 @@ class _ChallengesView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<ChallengesController>(
       builder: (context, controller, child) {
-        List<Challenge> challenges = controller.getFilteredChallenges();
-
         return Scaffold(
           backgroundColor: AppColors.bgCinza,
           body: Column(
@@ -36,31 +32,15 @@ class _ChallengesView extends StatelessWidget {
             children: [
               ChallengeHeader(),
               const FilterBox(),
-              Expanded(
-                child: controller.loading
-                    ? const Center(
-                  child: CircularProgressIndicator(),
-                )
-                    : challenges.isEmpty
-                    ? const Center(
-                  child: Text("Nenhum desafio encontrado"),
-                )
-                    : ListView.builder(
-                  itemCount: challenges.length,
-                  itemBuilder: (context, index) {
-                    final challenge =
-                    challenges[index];
-                    return ChallengeBox(
-                      challenge: challenge,
-                      onTap: () {
-                        controller.onTapChallengeBox(
-                          challenge,
-                        );
-                      },
+              ChallengesListWidget(
+                  onTap: (challenge) {
+                    controller.onTapChallengeBox(
+                      challenge,
                     );
                   },
-                ),
-              ),
+                  challenges: controller.filteredChallenges,
+                  loading: controller.loading
+              )
             ],
           ),
         );

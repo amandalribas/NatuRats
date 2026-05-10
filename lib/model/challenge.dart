@@ -19,7 +19,7 @@ class Challenge {
     required this.info,
     required this.type,
     required this.duration,
-    this.statistics
+    required this.statistics
   });
 
   factory Challenge.fromMap(String id, Map<String, dynamic> map) {
@@ -30,7 +30,8 @@ class Challenge {
       details: map["details"] ?? "NULL",
       info: List<String>.from(map["info"] ?? []),
       type: ChallengeType.fromMap(map["type"] ?? "NULL"),
-      duration: ChallengeDuration.fromMap(map["duration"] ?? "")
+      duration: ChallengeDuration.fromMap(map["duration"] ?? ""),
+      statistics: map["statistics"]
     );
   }
 

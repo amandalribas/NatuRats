@@ -11,22 +11,29 @@ class HomeController extends ChangeNotifier {
 
   bool loading = true;
   List<Challenge> activeChallenges = [];
-  String? name;
+  String? firstName;
 
   HomeController(this._context) {
-    _userRepository = _context.read<UserRepository>();
-    _challengesRepository = _context.read<ChallengesRepository>();
-    name = _userRepository.getFirstName();
     _initialize();
   }
 
   Future<void> _initialize() async {
-    loading = true;
+    _userRepository = _context.read<UserRepository>();
+    _challengesRepository = _context.read<ChallengesRepository>();
+
+    _getFirstName();
+    await _getActiveChallenges();
+    loading = false;
     notifyListeners();
+  }
+
+  void _getFirstName() {
+    firstName = _userRepository.getFirstName();
+  }
+
+  Future<void> _getActiveChallenges() async {
     String? userId = _userRepository.getCurrentUserId();
     activeChallenges = await _challengesRepository
         .getUsersActiveChallenges(userId!);
-    loading = false;
-    notifyListeners();
   }
 }

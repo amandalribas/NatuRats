@@ -11,7 +11,7 @@ enum ChallengeDuration implements Category {
   String get label {
     switch (this) {
       case ChallengeDuration.daily:
-        return "Diária";
+        return "Diário";
       case ChallengeDuration.weekly:
         return "Semanal";
       case ChallengeDuration.monthly:
