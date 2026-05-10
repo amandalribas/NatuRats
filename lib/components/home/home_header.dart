@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:naturats/components/home/progress_box.dart';
 import 'package:naturats/components/home/statistic_box.dart';
 import '../../theme/app_colors.dart';
+import '../../view/credits_page.dart';
 
 class HomePageHeader extends StatelessWidget {
   final String name;
@@ -33,7 +34,14 @@ class HomePageHeader extends StatelessWidget {
                 ),
               ),
               IconButton(
-                  onPressed: null,
+                  onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const CreditsPage(),
+                        ),
+                      );
+                    },
                   icon: const Icon(
                     Icons.info_outline,
                     color: AppColors.branco,
