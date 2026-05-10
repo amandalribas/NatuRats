@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/model/challenge.dart';
 import 'package:naturats/repository/challenges_repository.dart';
+import 'package:naturats/repository/user_repository.dart';
 import 'package:provider/provider.dart';
-import '../components/challenge/detail_challenge_box.dart';
+import '../view/challenge_details_page.dart';
 import '../model/challenge_duration.dart';
 import '../model/challenge_type.dart';
 
 class ChallengesController extends ChangeNotifier {
   final BuildContext _context;
   late final ChallengesRepository _challengesRepository;
+  late final UserRepository _userRepository;
+
   List<Challenge> _challenges = [];
   Set<ChallengeDuration> selectedDurations = {};
   Set<ChallengeType> selectedTypes = {};
@@ -16,6 +19,7 @@ class ChallengesController extends ChangeNotifier {
 
   ChallengesController(this._context) {
     _challengesRepository = _context.read<ChallengesRepository>();
+    _userRepository = _context.read<UserRepository>();
     _getChallenges();
   }
 
@@ -31,11 +35,11 @@ class ChallengesController extends ChangeNotifier {
     Navigator.push(
       _context,
       MaterialPageRoute(
-        builder: (context) =>  DetailChallengeBox(
-          title: challenge.title,
-          descr: challenge.description,
-          duration: challenge.duration,
-          type: challenge.type,
+        builder: (_) => ChangeNotifierProvider.value(
+          value: this,
+          child: DetailChallengeBox(
+            challenge: challenge,
+          ),
         ),
       ),
     );
@@ -71,5 +75,10 @@ class ChallengesController extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  Future<void> addChallengeToUserLibrary(String challengeId) async {
+    String? userId = _userRepository.getCurrentUserId();
+    await _challengesRepository.startChallenge(userId!, challengeId);
   }
 }

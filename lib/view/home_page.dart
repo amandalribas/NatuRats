@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/controller/home_controller.dart';
 import 'package:provider/provider.dart';
+import '../components/challenge/challenge_box.dart';
 import '../components/home/progress_box.dart';
 import '../components/home/statistic_box.dart';
 import '../theme/app_colors.dart';
@@ -24,7 +25,10 @@ class _HomeView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<HomeController>(
       builder: (context, controller, child) {
+        final activeChallenges = controller.activeChallenges;
+
         return Scaffold(
+          backgroundColor: AppColors.bgCinza,
           body: Column(
             children: [
               Container(
@@ -82,21 +86,40 @@ class _HomeView extends StatelessWidget {
                   ],
                 ),
               ),
-
-              Expanded(
-                child: Container(
-                  width: double.infinity,
-                  color: AppColors.branco,
-                  child: const Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Text(
-                      "Desafios Ativos",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
+              Container(
+                width: double.infinity,
+                child: const Padding(
+                  padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+                  child: Text(
+                    "Desafios Ativos",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
+                ),
+              ),
+              Expanded(
+                child: controller.loading
+                    ? const Center(
+                  child: CircularProgressIndicator(),
+                )
+                    : activeChallenges!.isEmpty
+                    ? const Center(
+                  child: Text("Nenhum desafio encontrado"),
+                )
+                    : ListView.builder(
+                  itemCount: activeChallenges.length,
+                  itemBuilder: (context, index) {
+                    final challenge =
+                    activeChallenges[index];
+                    return ChallengeBox(
+                      challenge: challenge,
+                      onTap: () {
+                        // TODO
+                      },
+                    );
+                  },
                 ),
               ),
             ],

@@ -33,4 +33,12 @@ class Challenge {
       duration: ChallengeDuration.fromMap(map["duration"] ?? "")
     );
   }
+
+  static Map<String, dynamic> startChallengeToMap(String challengeId) {
+    return {
+      "challenge_id": challengeId,
+      "started_at": DateTime.now(),
+      "status": "active"
+    };
+  }
 }

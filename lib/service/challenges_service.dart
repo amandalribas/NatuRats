@@ -39,4 +39,36 @@ class ChallengesService {
       return [];
     }
   }
+
+  Future<void> startChallenge(String userId, String challengeId) async {
+    try {
+      await _firestore
+          .collection("users")
+          .doc(userId)
+          .collection(collection)
+          .add(Challenge.startChallengeToMap(challengeId));
+    } catch (e) {
+      debugPrint("Error on start new challenge: $e.");
+      rethrow;
+    }
+  }
+
+  Future<List<String>> getAllUsersChallenges(String userId) async {
+    try {
+      QuerySnapshot snapshot = await _firestore
+          .collection("users")
+          .doc(userId)
+          .collection(collection)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data =
+        doc.data() as Map<String, dynamic>;
+        return data["challenge_id"] as String;
+      }).toList();
+    } catch (e) {
+      debugPrint("Error on challenges service, get users active challenges: $e");
+      return [];
+    }
+  }
 }

@@ -7,7 +7,7 @@ class UserRepository extends ChangeNotifier {
   final AuthenticationService _authService = AuthenticationService();
   final UserService _userService = UserService();
 
-  User? currentUser;
+  User? _currentUser;
   bool isSignedIn = false;
   bool isLoading = true;
   String? profilePictureUrl;
@@ -36,7 +36,7 @@ class UserRepository extends ChangeNotifier {
 
   Future<void> logout() async {
     await _authService.signOut();
-    currentUser = null;
+    _currentUser = null;
     isSignedIn = false;
     profilePictureUrl = null;
     notifyListeners();
@@ -54,7 +54,7 @@ class UserRepository extends ChangeNotifier {
         fbAuthUser.displayName
       );
     } else {
-      currentUser = user;
+      _currentUser = user;
     }
   }
 
@@ -69,21 +69,25 @@ class UserRepository extends ChangeNotifier {
       );
 
       await _userService.create(newUser);
-      currentUser = newUser;
+      _currentUser = newUser;
     } catch (e) {
       debugPrint("Error on create user: $e");
     }
   }
 
   String? getFirstName() {
-    String? name = currentUser?.name;
+    String? name = _currentUser?.name;
 
     final index = name?.indexOf(' ');
     return index == -1 ? name : name?.substring(0, index);
   }
 
   String? getFullName() {
-    return currentUser?.name;
+    return _currentUser?.name;
+  }
+
+  String? getCurrentUserId() {
+    return _currentUser?.id;
   }
 
   String? getProfilePictureUrl() {

@@ -1,27 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/category_tag.dart';
-import 'package:naturats/model/challenge_duration.dart';
-import 'package:naturats/model/challenge_type.dart';
+import 'package:naturats/model/challenge.dart';
 import 'package:naturats/theme/app_colors.dart';
+import 'package:provider/provider.dart';
+
+import '../controller/challenges_controller.dart';
 
 class DetailChallengeBox extends StatelessWidget {
-  final String title;
-  final String descr;
-  final ChallengeDuration duration;
-  final ChallengeType type;
+  final Challenge challenge;
 
   const DetailChallengeBox({
     super.key,
-    required this.title,
-    required this.descr,
-    required this.duration,
-    required this.type,
+    required this.challenge
   });
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<ChallengesController>();
+
     return Scaffold(
-      backgroundColor: AppColors.bgCinza,
+      backgroundColor: AppColors.branco,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -39,11 +37,11 @@ class DetailChallengeBox extends StatelessWidget {
                   height: 80,
                   width: 80,
                   decoration: BoxDecoration(
-                    color: type.color,
+                    color: challenge.type.color,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Icon(
-                    type.icon,
+                    challenge.type.icon,
                     size: 40,
                     color: AppColors.preto,
                   ),
@@ -54,7 +52,7 @@ class DetailChallengeBox extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        challenge.title,
                         style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -67,9 +65,9 @@ class DetailChallengeBox extends StatelessWidget {
                       // --- TAGS DE CATEGORIA E SUB CATEGORIA ---
                       Row(
                         children: [
-                          CategoryTag(category: duration),
+                          CategoryTag(category: challenge.duration),
                           const SizedBox(width: 4), // Espaço entre as tags
-                          CategoryTag(category: type),
+                          CategoryTag(category: challenge.type),
                         ],
                       ),
                     ],
@@ -92,7 +90,7 @@ class DetailChallengeBox extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              descr,
+              challenge.description,
               style: const TextStyle(
                 fontSize: 16,
                 color: Colors.black87,
@@ -110,6 +108,7 @@ class DetailChallengeBox extends StatelessWidget {
                 height: 70,
                 child: ElevatedButton(
                   onPressed: () {
+                    controller.addChallengeToUserLibrary(challenge.id);
                     debugPrint("Clicou em adicionar desafio");
                   },
                   style: ElevatedButton.styleFrom(
@@ -121,7 +120,7 @@ class DetailChallengeBox extends StatelessWidget {
                     elevation: 0,
                   ),
                   child: const Text(
-                    "Adicionar Desafio à biblioteca",
+                    "Iniciar desafio",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
