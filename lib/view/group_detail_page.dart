@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:naturats/theme/app_colors.dart';
 
 class GroupDetailPage extends StatelessWidget {
@@ -21,6 +23,8 @@ class GroupDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageBytes = _decodeBase64Image(imageUrl);
+
     return Scaffold(
       backgroundColor: AppColors.branco,
 
@@ -57,18 +61,37 @@ class GroupDetailPage extends StatelessWidget {
           ),
 
           ClipRRect(
-            child: Container(
-              
-              child: Image.network(
-                imageUrl,
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
+            child: imageBytes != null
+                ? Image.memory(
+                    imageBytes,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                : Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: AppColors.borderCinza.withOpacity(0.15),
+                    alignment: Alignment.center,
+                    child: const Icon(Icons.image_outlined),
+                  ),
           ),
         ],
       ),
     );
+  }
+
+  Uint8List? _decodeBase64Image(String value) {
+    if (value.isEmpty) {
+      return null;
+    }
+
+    final normalizedValue = value.contains(',') ? value.split(',').last : value;
+
+    try {
+      return base64Decode(normalizedValue);
+    } catch (_) {
+      return null;
+    }
   }
 }

@@ -3,10 +3,24 @@ import 'package:naturats/components/group/group_header.dart';
 import 'package:naturats/components/group/group_search_bar.dart';
 import 'package:naturats/components/group/group_options_sheet.dart';
 import 'package:naturats/components/group/group_card.dart';
+import 'package:naturats/controller/group_controller.dart';
 import 'package:naturats/theme/app_colors.dart';
 
-class GroupPage extends StatelessWidget {
+class GroupPage extends StatefulWidget {
   const GroupPage({super.key});
+
+  @override
+  State<GroupPage> createState() => _GroupPageState();
+}
+
+class _GroupPageState extends State<GroupPage> {
+  final GroupController _groupController = GroupController();
+
+  @override
+  void initState() {
+    super.initState();
+    _groupController.loadGroups();
+  }
 
   void _showOptions(BuildContext context) {
     showModalBottomSheet(
@@ -45,26 +59,20 @@ class GroupPage extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            //exemplos
+            // LISTA DE GRUPOS
+            ListenableBuilder(
+              listenable: _groupController,
+              builder: (context, _) {
+                if (_groupController.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-            const Group(
-              id: "1",
-              name: "Planeta em Ação",
-              description:
-                  "Pessoas que se unem para transformar pequenas atitudes em grandes mudanças para o planeta.",
-              totalPeople: 1200,
-              totalPoints: 34250,
-              imageUrl: "https://static.todamateria.com.br/upload/ma/os/maosplantandoarvorespelosobjetivosdedesenvolvimentosustentaveldomeioambiente-cke.jpg",
-            ),
-
-            const Group(
-              id: "2",
-              name: "Protetores da Vida Animal",
-              description:
-                  "Grupo focado na defesa, cuidado e respeito aos animais em todas as formas.",
-              totalPeople: 400,
-              totalPoints: 1520,
-              imageUrl: "https://www.cmc.mg.gov.br/wordpress/wp-content/uploads/2021/09/bem-estar-animal.jpg",
+                return Column(
+                  children: _groupController.groups
+                    .map((group) => GroupCard(group: group))
+                    .toList(),
+                );
+              }
             ),
 
             const SizedBox(height: 80),
