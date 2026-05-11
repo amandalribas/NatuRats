@@ -20,30 +20,28 @@ class ProfileController extends ChangeNotifier {
     }
     return null;
   }
-
-  // TODO
+ 
   int getUserLevel() {
-    return 12;
+    return _userRepository.getLevel();
   }
 
-  // TODO
   int getUserPoints() {
-    return 2450;
+    return _userRepository.getNumPoints();
   }
 
   // TODO
   int getTotalMedals() {
-    return 12;
+    return _userRepository.getNumMedals();
   }
 
   // TODO
   int getSequence() {
-    return 15;
+    return _userRepository.getStreak();
   }
 
   // TODO
   int getTotalChallenges() {
-    return 32;
+    return _userRepository.getNumMissions();
   }
 
   // TODO

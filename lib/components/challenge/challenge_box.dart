@@ -19,7 +19,7 @@ class ChallengeBox extends StatelessWidget {
       //height: 110,
       constraints: const BoxConstraints(minHeight: 120),
       width: double.infinity, // Ocupa a largura disponível
-      margin: const EdgeInsets.fromLTRB(2,0,2,15),
+      margin: const EdgeInsets.fromLTRB(15,0,15,15),
       decoration: BoxDecoration(
         color: AppColors.branco,
         borderRadius: BorderRadius.circular(25),
@@ -63,6 +63,8 @@ class ChallengeBox extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -93,6 +95,7 @@ class ChallengeBox extends StatelessWidget {
                       ),
                     ],
                   ),
+                    ),
                 ),
               ],
             ),

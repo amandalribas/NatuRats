@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:naturats/model/challenge.dart';
 import 'package:naturats/model/user.dart';
 
 class UserService {
@@ -34,4 +35,17 @@ class UserService {
       return null;
     }
   }
+
+  Future<void> update(User user) async {
+    try {
+      await _firestore
+          .collection(collection)
+          .doc(user.id)
+          .update(user.toMap());
+    } catch (e) {
+      debugPrint("Error updating user: $e");
+      rethrow;
+    }
+  }
+   
 }

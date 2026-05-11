@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:naturats/model/challenge.dart';
 import 'package:naturats/service/auth_service.dart';
 import 'package:naturats/service/user_service.dart';
 import '../model/user.dart';
@@ -65,7 +66,12 @@ class UserRepository extends ChangeNotifier {
         email: email ?? "",
         name: name ?? "",
         createdAt: DateTime.now(),
-        updatedAt: DateTime.now()
+        updatedAt: DateTime.now(),
+        numPoints: 0,
+        level: 1,
+        numMedals: 0,
+        numMissions: 0,
+        streak: 0
       );
 
       await _userService.create(newUser);
@@ -93,4 +99,49 @@ class UserRepository extends ChangeNotifier {
   String? getProfilePictureUrl() {
     return profilePictureUrl;
   }
+
+  Future<void> completeChallenge(Challenge challenge) async {
+    if (_currentUser == null) return;
+
+    _currentUser!.numPoints += challenge.duration.points;
+
+    final limit = 50 * _currentUser!.level;
+
+    if (_currentUser!.numPoints >= limit) {
+      _currentUser!.numPoints -= limit;
+      _currentUser!.level++;
+    }
+
+    _currentUser!.numMissions += 1;
+
+    // TODO: medalhas
+    // TODO: streak
+
+    _currentUser!.updatedAt = DateTime.now();
+
+    await _userService.update(_currentUser!);
+
+    notifyListeners();
+  }
+
+  int getNumPoints(){
+    return _currentUser?.numPoints ?? 0;
+  }
+
+  int getLevel(){
+    return _currentUser?.level ?? 0;
+  }
+
+  int getNumMedals(){
+    return _currentUser?.numMedals ?? 0;
+  }
+
+  int getNumMissions(){
+    return _currentUser?.numMissions ?? 0;
+  }
+
+  int getStreak(){
+    return _currentUser?.streak ?? 0;
+  }
+
 }

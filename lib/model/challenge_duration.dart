@@ -31,6 +31,20 @@ enum ChallengeDuration implements Category {
     }
   }
 
+
+  int get points {
+    switch (this) {
+      case ChallengeDuration.daily:
+        return 5;
+
+      case ChallengeDuration.weekly:
+        return 25;
+
+      case ChallengeDuration.monthly:
+        return 100;
+    }
+  }
+
   factory ChallengeDuration.fromMap(String duration) {
     switch (duration) {
       case "daily":
@@ -47,4 +61,6 @@ enum ChallengeDuration implements Category {
         );
     }
   }
+
+  
 }

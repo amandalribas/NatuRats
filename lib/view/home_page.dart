@@ -28,7 +28,7 @@ class _HomeView extends StatelessWidget {
           backgroundColor: AppColors.bgCinza,
           body: Column(
             children: [
-              HomePageHeader(name: controller.firstName!),
+              HomePageHeader(name: controller.firstName!, level: controller.level, points: controller.numPoints, streak: controller.streak),
               SizedBox(
                 width: double.infinity,
                 child: const Padding(
