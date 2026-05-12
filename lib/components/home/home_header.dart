@@ -71,7 +71,7 @@ class HomePageHeader extends StatelessWidget {
                 children: [
                   Expanded(child: StatisticBox(title: "Nível", value: level)),
                   const SizedBox(width: 10),
-                  Expanded(child: StatisticBox(title: "Pontos", value: points)),
+                  Expanded(child: StatisticBox(title: "Pontos", value: (points + (level * (level-1) * 25)))),
                   const SizedBox(width: 10),
                   Expanded(child: StatisticBox(title: "Sequência", value: streak)),
                 ],
@@ -85,3 +85,6 @@ class HomePageHeader extends StatelessWidget {
     );
   }
 }
+
+
+

@@ -103,7 +103,14 @@ class UserRepository extends ChangeNotifier {
   Future<void> completeChallenge(Challenge challenge) async {
     if (_currentUser == null) return;
 
+    print("ANTES: ${_currentUser!.numPoints}");
+
+
     _currentUser!.numPoints += challenge.duration.points;
+
+
+
+print("DEPOIS: ${_currentUser!.numPoints}");
 
     final limit = 50 * _currentUser!.level;
 

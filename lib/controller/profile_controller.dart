@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:naturats/model/challenge.dart';
 import 'package:naturats/model/medal.dart';
 import 'package:naturats/repository/user_repository.dart';
 import 'package:provider/provider.dart';
@@ -51,4 +52,9 @@ class ProfileController extends ChangeNotifier {
       Medal(icon: Icons.eco, title: 'Habitante da floresta', description: 'Plante uma árvore'),
     ];
   }
+
+  void completeChallenge(Challenge challenge){
+    _userRepository.completeChallenge(challenge);
+  }
+
 }

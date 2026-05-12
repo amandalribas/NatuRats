@@ -73,7 +73,8 @@ class _ProfileViewState extends State<_ProfileView> {
                       Padding(
                         padding: const EdgeInsets.only(left: 55),
                         child: Text(
-                          'Nível ${controller.getUserLevel()} • ${controller.getUserPoints()} pontos',
+                        
+                          'Nível ${controller.getUserLevel()} • ${controller.getUserPoints() + (controller.getUserLevel() * (controller.getUserLevel()-1) * 25)} pontos',
                           style: const TextStyle(
                             color: AppColors.branco,
                             fontSize: 15,

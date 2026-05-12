@@ -12,9 +12,10 @@ class HomeController extends ChangeNotifier {
   bool loading = true;
   List<Challenge> activeChallenges = [];
   String? firstName;
-  late int level;
-  late int numPoints;
-  late int streak;
+  int get level => _userRepository.getLevel();
+  int get numPoints => _userRepository.getNumPoints();
+  int get streak => _userRepository.getStreak();
+
 
   HomeController(this._context) {
     _initialize();
@@ -25,9 +26,7 @@ class HomeController extends ChangeNotifier {
     _challengesRepository = _context.read<ChallengesRepository>();
 
     _getFirstName();
-    level = _userRepository.getLevel();
-    numPoints = _userRepository.getNumPoints();
-    streak = _userRepository.getStreak();
+ 
 
     await _getActiveChallenges();
     loading = false;
@@ -38,11 +37,14 @@ class HomeController extends ChangeNotifier {
     firstName = _userRepository.getFirstName();
   }
 
-  
-
   Future<void> _getActiveChallenges() async {
     String? userId = _userRepository.getCurrentUserId();
     activeChallenges = await _challengesRepository
         .getUsersActiveChallenges(userId!);
+  }
+
+  Future<void> completeChallenge(Challenge challenge,) async {
+    await _userRepository.completeChallenge(challenge);
+    notifyListeners();
   }
 }

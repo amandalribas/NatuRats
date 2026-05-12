@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:naturats/components/challenge/challenges_list.dart';
+import 'package:naturats/components/challenge/active_challenges_list.dart';
 import 'package:naturats/components/home/home_header.dart';
 import 'package:naturats/controller/home_controller.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +7,8 @@ import '../theme/app_colors.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +24,7 @@ class _HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    
     return Consumer<HomeController>(
       builder: (context, controller, child) {
         return Scaffold(
@@ -42,7 +45,8 @@ class _HomeView extends StatelessWidget {
                   ),
                 ),
               ),
-              ChallengesListWidget(
+              ActiveChallengesListWidget(
+
                   onTap: (challenge) {
                     // TODO
                   },

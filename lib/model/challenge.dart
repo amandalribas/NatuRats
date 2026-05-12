@@ -10,6 +10,7 @@ class Challenge {
   ChallengeType type;
   ChallengeDuration duration;
   Map<String,dynamic>? statistics;
+  int goal;
 
   Challenge({
     required this.id,
@@ -19,7 +20,8 @@ class Challenge {
     required this.info,
     required this.type,
     required this.duration,
-    required this.statistics
+    required this.statistics,
+    required this.goal,
   });
 
   factory Challenge.fromMap(String id, Map<String, dynamic> map) {
@@ -31,7 +33,8 @@ class Challenge {
       info: List<String>.from(map["info"] ?? []),
       type: ChallengeType.fromMap(map["type"] ?? "NULL"),
       duration: ChallengeDuration.fromMap(map["duration"] ?? ""),
-      statistics: map["statistics"]
+      statistics: map["statistics"],
+      goal: map["goal"] ?? 1,
     );
   }
 
