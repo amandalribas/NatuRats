@@ -48,11 +48,7 @@ class _ActiveChallengesListWidgetState
     });
   }
 
-  void finishChallenge(Challenge challenge) {
-    setState(() {
-      widget.challenges.remove(challenge);
-    });
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -120,8 +116,10 @@ class _ActiveChallengesListWidgetState
               registerProgress(challenge.id);
             },
 
-            onFinish: () {
-              finishChallenge(challenge);
+            onFinish: () async {
+              await context
+                  .read<HomeController>()
+                  .completeChallenge(challenge);
             },
           );
         },

@@ -43,8 +43,20 @@ class HomeController extends ChangeNotifier {
         .getUsersActiveChallenges(userId!);
   }
 
-  Future<void> completeChallenge(Challenge challenge,) async {
+  Future<void> completeChallenge(Challenge challenge) async {
+    final userId = _userRepository.getCurrentUserId()!;
+
     await _userRepository.completeChallenge(challenge);
+
+    await _challengesRepository.finishChallenge(
+      userId,
+      challenge.id,
+    );
+
+    activeChallenges.removeWhere(
+      (c) => c.id == challenge.id,
+    );
+
     notifyListeners();
   }
 }

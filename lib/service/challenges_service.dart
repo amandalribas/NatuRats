@@ -71,4 +71,22 @@ class ChallengesService {
       return [];
     }
   }
+
+  Future<void> finishChallenge(String userId, String challengeId) async {
+    try {
+      final snapshot = await _firestore
+          .collection("users")
+          .doc(userId)
+          .collection(collection)
+          .where("challenge_id", isEqualTo: challengeId)
+          .get();
+
+      for (var doc in snapshot.docs) {
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      debugPrint("Error finishing challenge: $e");
+      rethrow;
+    }
+  }
 }

@@ -49,4 +49,9 @@ class ChallengesRepository {
     }
   }
 
+  Future<void> finishChallenge(String userId, String challengeId) async {
+    await _challengesService.finishChallenge(userId, challengeId);
+  }
+
+
 }

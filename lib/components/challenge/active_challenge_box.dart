@@ -28,7 +28,7 @@ class ActiveChallengeBox extends StatelessWidget {
 
   double get progress => currentProgress / goal;
 
-  bool get isFinished => currentProgress >= goal;
+  bool get canFinish => currentProgress >= goal - 1;
 
   String get progressText =>
       "$currentProgress/$goal concluído";
@@ -208,7 +208,7 @@ class ActiveChallengeBox extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          if (isFinished) {
+                          if (canFinish) {
                             onFinish();
 
                             onCompleteChallenge();
@@ -233,7 +233,7 @@ class ActiveChallengeBox extends StatelessWidget {
                           width: 40,
 
                           decoration: BoxDecoration(
-                            color: isFinished
+                            color: canFinish
                                 ? Colors.green.shade100
                                 : const Color(
                                     0xFFF1F7F1),
@@ -242,7 +242,7 @@ class ActiveChallengeBox extends StatelessWidget {
                           ),
 
                           child: Icon(
-                            isFinished
+                            canFinish
                                 ? Icons.check
                                 : Icons.add,
 
@@ -257,7 +257,7 @@ class ActiveChallengeBox extends StatelessWidget {
                       const SizedBox(height: 4),
 
                       Text(
-                        isFinished
+                        canFinish
                             ? "Finalizar"
                             : "Registrar",
 
