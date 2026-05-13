@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:naturats/model/group_model.dart';
 import 'package:naturats/theme/app_colors.dart';
-import 'package:naturats/view/group_detail_page.dart';
+import 'package:naturats/view/group_feed_rank_page.dart';
 
 class GroupCard extends StatelessWidget {
   final GroupModel group;
@@ -24,7 +24,7 @@ class GroupCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => GroupDetailPage(
+              builder: (context) => GroupFeedPage(
                 id: group.id,
                 name: group.name,
                 description: group.description,
