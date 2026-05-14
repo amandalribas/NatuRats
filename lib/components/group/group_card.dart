@@ -24,7 +24,7 @@ class GroupCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => GroupFeedPage(
+              builder: (context) => GroupFeedRankPage(
                 id: group.id,
                 name: group.name,
                 description: group.description,
