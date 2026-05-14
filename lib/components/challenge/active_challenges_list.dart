@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/controller/home_controller.dart';
-import 'package:naturats/controller/profile_controller.dart';
 import 'package:provider/provider.dart';
 import '../../model/challenge.dart';
 import 'active_challenge_box.dart';
@@ -96,12 +95,6 @@ class _ActiveChallengesListWidgetState
           final int goal = challenge.goal;
 
           return ActiveChallengeBox(
-
-            onCompleteChallenge: () {
-              context
-                  .read<HomeController>()
-                  .completeChallenge(challenge);
-            },
 
             challenge: challenge,
 

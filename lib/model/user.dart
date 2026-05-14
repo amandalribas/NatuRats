@@ -11,6 +11,7 @@ class User {
   int numMedals;
   int numMissions;
   int streak;
+  Map<String,int>? statistics;
 
   User({
     required this.id,
@@ -23,6 +24,7 @@ class User {
     required this.numMedals,
     required this.numMissions,
     required this.streak,
+    required this.statistics,
 
   });
 
@@ -37,6 +39,8 @@ class User {
       "num_medals": numMedals,
       "num_missions": numMissions,
       "streak": streak,
+      "statistics": statistics,
+       
     };
   }
 
@@ -52,6 +56,12 @@ class User {
       numMedals: map["num_medals"] ?? 0,
       numMissions: map["num_missions"] ?? 0,
       streak: map["streak"] ?? 0,
+      statistics: Map<String, int>.from(map["statistics"] ?? {
+        "CO2": 0,
+        "water": 0,
+        "recycled": 0,
+        "km": 0,
+        },),
     );
   }
 }

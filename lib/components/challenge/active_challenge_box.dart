@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/category_tag.dart';
-import 'package:naturats/controller/profile_controller.dart';
 import 'package:naturats/model/challenge.dart';
 import 'package:naturats/view/finish_challenge_dialog.dart';
 
@@ -14,7 +13,6 @@ class ActiveChallengeBox extends StatelessWidget {
   final VoidCallback onRegister;
   final VoidCallback onFinish;
 
-  final VoidCallback onCompleteChallenge;
   const ActiveChallengeBox({
     super.key,
     required this.challenge,
@@ -22,8 +20,7 @@ class ActiveChallengeBox extends StatelessWidget {
     required this.goal,
     required this.onTap,
     required this.onRegister,
-    required this.onFinish,
-    required this.onCompleteChallenge,  
+    required this.onFinish, 
     });
 
   double get progress => currentProgress / goal;
@@ -210,10 +207,6 @@ class ActiveChallengeBox extends StatelessWidget {
                         onTap: () async {
                           if (canFinish) {
                             onFinish();
-
-                            onCompleteChallenge();
-
-
                             await showDialog(
                               context: context,
                               barrierDismissible: false,
