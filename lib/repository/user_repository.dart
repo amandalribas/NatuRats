@@ -163,4 +163,12 @@ class UserRepository extends ChangeNotifier {
     return _currentUser?.streak ?? 0;
   }
 
+  Map<String, int> getStatistics() {
+    return _currentUser?.statistics ?? {
+      "CO2": 0,
+      "water": 0,
+      "recycled": 0,
+      "km": 0,
+    };
+}
 }

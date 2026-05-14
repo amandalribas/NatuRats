@@ -45,6 +45,10 @@ class ProfileController extends ChangeNotifier {
     return _userRepository.getNumMissions();
   }
 
+  Map<String, int> getStatistics() {
+    return _userRepository.getStatistics();
+  }
+
   // TODO
   List<Medal> getMedals() {
     return [
