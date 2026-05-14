@@ -53,8 +53,4 @@ class ProfileController extends ChangeNotifier {
     ];
   }
 
-  void completeChallenge(Challenge challenge){
-    _userRepository.completeChallenge(challenge);
-  }
-
 }
