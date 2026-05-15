@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:naturats/model/challenge.dart';
 import 'package:naturats/repository/challenges_repository.dart';
@@ -20,6 +22,11 @@ class ChallengesController extends ChangeNotifier {
   final Set<ChallengeType> selectedTypes = {};
   bool loading = true;
 
+  Set<String> _activeChallengeIds = {};
+  List<Challenge> _dailyChallenges = [];
+  DateTime? _lastGeneratedDate;
+  Timer? _dayChangeTimer;
+
   ChallengesController(this._context) {
     _initialize();
   }
@@ -29,25 +36,64 @@ class ChallengesController extends ChangeNotifier {
     _userRepository = _context.read<UserRepository>();
 
     await _getChallenges();
-    _filterChallenges();
+    await _loadActiveChallengeIds();
+    _generateDailyIfNeeded();
+    _applyFilters();
     loading = false;
     notifyListeners();
+    _startDayChangeTimer();
   }
 
   Future<void> _getChallenges() async {
     _challenges = await _challengesRepository.getChallenges();
   }
 
-  void _filterChallenges () {
-    filteredChallenges = _challenges.where((challenge) {
-        bool durationMatch = selectedDurations.isEmpty ||
-            selectedDurations.contains(challenge.duration);
+  Future<void> _loadActiveChallengeIds() async {
+    final userId = _userRepository.getCurrentUserId();
+    if (userId != null) {
+      final activeChallenges = await _challengesRepository.getUsersActiveChallenges(userId);
+      _activeChallengeIds = activeChallenges.map((c) => c.id).toSet();
+    }
+  }
 
-        bool typeMatch = selectedTypes.isEmpty ||
-                selectedTypes.contains(challenge.type);
+  void _generateDailyIfNeeded() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
 
-        return durationMatch && typeMatch;
-      }).toList();
+    if (_lastGeneratedDate == today) return;
+
+    _lastGeneratedDate = today;
+    final dateString = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+    final seed = dateString.hashCode;
+    final random = Random(seed);
+
+    final available = _challenges.toList();
+
+    List<Challenge> daily = available.where((c) => c.duration == ChallengeDuration.daily).toList();
+    List<Challenge> weekly = available.where((c) => c.duration == ChallengeDuration.weekly).toList();
+    List<Challenge> monthly = available.where((c) => c.duration == ChallengeDuration.monthly).toList();
+
+    daily.shuffle(random);
+    weekly.shuffle(random);
+    monthly.shuffle(random);
+
+    _dailyChallenges = [
+      ...daily.take(5),
+      ...weekly.take(5),
+      ...monthly.take(5),
+    ];
+  }
+
+  void _applyFilters() {
+    filteredChallenges = _dailyChallenges.where((challenge) {
+      if (_activeChallengeIds.contains(challenge.id)) return false;
+
+      bool durationMatch = selectedDurations.isEmpty || selectedDurations.contains(challenge.duration);
+      bool typeMatch = selectedTypes.isEmpty || selectedTypes.contains(challenge.type);
+      return durationMatch && typeMatch;
+    }).toList();
+
+    notifyListeners();
   }
 
   void toggleDurationFilter(ChallengeDuration duration) {
@@ -56,9 +102,7 @@ class ChallengesController extends ChangeNotifier {
     } else {
       selectedDurations.add(duration);
     }
-
-    _filterChallenges();
-    notifyListeners();
+    _applyFilters();
   }
 
   void toggleTypeFilter(ChallengeType type) {
@@ -67,9 +111,7 @@ class ChallengesController extends ChangeNotifier {
     } else {
       selectedTypes.add(type);
     }
-
-    _filterChallenges();
-    notifyListeners();
+    _applyFilters();
   }
 
   void onTapChallengeBox(Challenge challenge) {
@@ -91,6 +133,8 @@ class ChallengesController extends ChangeNotifier {
       String? userId = _userRepository.getCurrentUserId();
       await _challengesRepository.startChallenge(userId!, challengeId);
       if (_context.mounted) {
+        _activeChallengeIds.add(challengeId);
+        _applyFilters();
         CustomSnackbar.show(
           context: _context,
           message: "Desafio iniciado!",
@@ -108,5 +152,23 @@ class ChallengesController extends ChangeNotifier {
         );
       }
     }
+  }
+
+  void _startDayChangeTimer() {
+    _dayChangeTimer?.cancel();
+    _dayChangeTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      if (_lastGeneratedDate != null && _lastGeneratedDate != today) {
+        _generateDailyIfNeeded();
+        _applyFilters();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _dayChangeTimer?.cancel();
+    super.dispose();
   }
 }

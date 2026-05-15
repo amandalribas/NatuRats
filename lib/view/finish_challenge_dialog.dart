@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/challenge_impact_desc.dart';
-import 'package:naturats/controller/challenges_controller.dart';
 import 'package:naturats/model/challenge.dart';
-import 'package:provider/provider.dart';
 
 class FinishChallengeDialog extends StatelessWidget {
 
@@ -17,7 +15,6 @@ class FinishChallengeDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controllerChallenge = context.watch<ChallengesController>;
     return Dialog(
       backgroundColor: Colors.transparent,
 
