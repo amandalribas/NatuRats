@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:naturats/theme/app_colors.dart';
 
 class GroupSearchBar extends StatelessWidget {
-  const GroupSearchBar({super.key});
+  final Function(String) onChanged;
+
+  const GroupSearchBar({
+    super.key,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,8 +25,9 @@ class GroupSearchBar extends StatelessWidget {
             ),
           ],
         ),
-        child: const TextField(
-          decoration: InputDecoration(
+        child: TextField(
+          onChanged: onChanged,
+          decoration: const InputDecoration(
             hintText: "Pesquisar por um grupo",
             prefixIcon: Icon(Icons.search),
             border: InputBorder.none,

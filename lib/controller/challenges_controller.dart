@@ -51,7 +51,7 @@ class ChallengesController extends ChangeNotifier {
   Future<void> _loadActiveChallengeIds() async {
     final userId = _userRepository.getCurrentUserId();
     if (userId != null) {
-      final activeChallenges = await _challengesRepository.getUsersActiveChallenges(userId);
+      final activeChallenges = await _challengesRepository.getActiveChallenges(userId);
       _activeChallengeIds = activeChallenges.map((c) => c.id).toSet();
     }
   }

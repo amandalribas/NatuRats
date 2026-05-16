@@ -108,7 +108,7 @@ class UserRepository extends ChangeNotifier {
   }
 
   Future<void> completeChallenge(Challenge challenge) async {
-    print("chamada");
+    debugPrint("chamada");
     if (_currentUser == null) return;
 
     _currentUser!.numPoints += challenge.duration.points;
@@ -124,19 +124,17 @@ class UserRepository extends ChangeNotifier {
     // TODO: medalhas
     // TODO: streak
 
-    if (challenge.statistics != null) {
-      challenge.statistics!.forEach((key, value) {
-        if (value != null) {
-          String userKey = key.toLowerCase();
-      
-          int addedValue = int.tryParse(value.toString()) ?? 0;
-          if (_currentUser!.statistics != null) {
-            _currentUser!.statistics![userKey] = 
-                (_currentUser!.statistics![userKey] ?? 0) + addedValue;
-          }
+    challenge.statistics.forEach((key, value) {
+      if (value != null) {
+        String userKey = key.toLowerCase();
+
+        int addedValue = int.tryParse(value.toString()) ?? 0;
+        if (_currentUser!.statistics != null) {
+          _currentUser!.statistics![userKey] =
+              (_currentUser!.statistics![userKey] ?? 0) + addedValue;
         }
-      });
-    }
+      }
+    });
 
     await _userService.update(_currentUser!);
 

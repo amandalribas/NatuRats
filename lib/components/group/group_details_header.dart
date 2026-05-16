@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:naturats/theme/app_colors.dart';
 
 class GroupDetailsHeader extends StatelessWidget {
   final String name;

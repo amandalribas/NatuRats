@@ -110,7 +110,7 @@ class FinishChallengeDialog extends StatelessWidget {
 
                   const SizedBox(height: 18),
                   ChallengeImpact(
-                    map: challenge.statistics!,
+                    map: challenge.statistics,
                   ),
                   /*
                   Text(

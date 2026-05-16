@@ -53,24 +53,25 @@ class _GroupPageState extends State<GroupPage> {
           children: [
             const GroupHeader(),
 
-            const SizedBox(height: 15),
-
-            const GroupSearchBar(),
-
-            const SizedBox(height: 20),
-
             // LISTA DE GRUPOS
             ListenableBuilder(
               listenable: _groupController,
               builder: (context, _) {
                 if (_groupController.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Column(children: [
+                    SizedBox(height: 30),
+                    Center(child: CircularProgressIndicator())
+                  ]);
                 }
 
                 return Column(
-                  children: _groupController.groups
-                    .map((group) => GroupCard(group: group))
-                    .toList(),
+                  children: [
+                    const SizedBox(height: 15),
+                    GroupSearchBar(onChanged: _groupController.updateSearch),
+                    const SizedBox(height: 20),
+                    ..._groupController.groups
+                        .map((group) => GroupCard(group: group))
+                  ]
                 );
               }
             ),

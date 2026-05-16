@@ -4,21 +4,33 @@ import 'package:naturats/repository/group_repository.dart';
 
 class GroupController extends ChangeNotifier {
   late final GroupRepository _groupRepository = GroupRepository();
-  List<GroupModel> groups = [];
+  List<GroupModel> _groups = [];
+  String _searchText = "";
   bool isLoading = false;
-
 
   Future<List<GroupModel>> loadGroups() async {
     isLoading = true;
     notifyListeners();
 
     final groups = await _groupRepository.fetchGroups();
-    this.groups = groups;
+    _groups = groups;
 
     isLoading = false;
     notifyListeners();
 
     return groups;
+  }
+
+  List<GroupModel> get groups {
+    if (_searchText.isEmpty) {
+      return _groups;
+    }
+
+    return _groups.where((group) {
+      return group.name
+          .toLowerCase()
+          .contains(_searchText);
+    }).toList();
   }
 
   void createGroup({
@@ -34,4 +46,8 @@ class GroupController extends ChangeNotifier {
       isPublic: isPublic);
   }
 
+  void updateSearch(String value) {
+    _searchText = value.toLowerCase();
+    notifyListeners();
+  }
 }

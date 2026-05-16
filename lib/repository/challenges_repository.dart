@@ -67,5 +67,4 @@ class ChallengesRepository {
     await _challengesService.finishChallenge(userId, challengeId);
   }
 
-
 }
