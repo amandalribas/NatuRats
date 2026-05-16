@@ -6,6 +6,7 @@ class ChallengesRepository {
   final ChallengesService _challengesService = ChallengesService();
 
   List<Challenge> _challenges = [];
+  List<Challenge> _currentUserActiveChallenges = [];
 
   ChallengesRepository();
 
@@ -17,15 +18,6 @@ class ChallengesRepository {
     }
   }
 
-  Future<void> startChallenge(String userId, String challengeId) async {
-    try {
-      await _challengesService.startChallenge(userId, challengeId);
-    } catch (e) {
-      debugPrint("Error on challenges repository, start new challenge: $e");
-      rethrow;
-    }
-  }
-
   Future<List<Challenge>> getChallenges() async {
     if (_challenges.isEmpty) {
       await _fetchAllChallenges();
@@ -33,19 +25,41 @@ class ChallengesRepository {
     return _challenges;
   }
 
-  Future<List<Challenge>> getUsersActiveChallenges(String userId) async {
+  Future<void> _fetchUsersActiveChallenges(String userId) async {
     try {
       if (_challenges.isEmpty) {
         await _fetchAllChallenges();
       }
 
       final ids = await _challengesService.getAllUsersChallenges(userId);
-      return _challenges.where((challenge) {
+      _currentUserActiveChallenges = _challenges.where((challenge) {
         return ids.contains(challenge.id);
       }).toList();
     } catch (e) {
+      debugPrint("Error on challenges repository, fetch users active challenges: $e");
+    }
+  }
+
+  Future<List<Challenge>> getActiveChallenges(String userId) async {
+    try {
+      if (_currentUserActiveChallenges.isEmpty) {
+        await _fetchUsersActiveChallenges(userId);
+      }
+      return _currentUserActiveChallenges;
+    } catch (e) {
       debugPrint("Error on challenges repository, get users active challenges: $e");
       return [];
+    }
+  }
+
+  Future<void> startChallenge(String userId, String challengeId) async {
+    try {
+      await _challengesService.startChallenge(userId, challengeId);
+      Challenge challenge = _challenges.firstWhere((c) => c.id == challengeId);
+      _currentUserActiveChallenges.add(challenge);
+    } catch (e) {
+      debugPrint("Error on challenges repository, start new challenge: $e");
+      rethrow;
     }
   }
 

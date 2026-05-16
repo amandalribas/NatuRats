@@ -40,7 +40,7 @@ class HomeController extends ChangeNotifier {
   Future<void> _getActiveChallenges() async {
     String? userId = _userRepository.getCurrentUserId();
     activeChallenges = await _challengesRepository
-        .getUsersActiveChallenges(userId!);
+        .getActiveChallenges(userId!);
   }
 
   Future<void> completeChallenge(Challenge challenge) async {

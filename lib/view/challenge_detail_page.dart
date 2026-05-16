@@ -121,7 +121,7 @@ class DetailChallengeBox extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     ChallengeImpact(
-                      map: challenge.statistics!,
+                      map: challenge.statistics,
                     ),
                     const SizedBox(height: 20),
                   ],

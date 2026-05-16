@@ -9,7 +9,7 @@ class Challenge {
   List<String> info;
   ChallengeType type;
   ChallengeDuration duration;
-  Map<String,dynamic>? statistics;
+  Map<String,dynamic> statistics;
   int goal;
 
   Challenge({
