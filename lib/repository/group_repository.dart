@@ -77,11 +77,17 @@ class GroupRepository {
     for (var doc in publicGroupsSnapshot.docs) {
       final infoSnapshot = await doc.reference.collection('info').doc('info').get();
       final info = infoSnapshot.data() ?? {};
+      
+      // Conta número de membros
+      final memberDoc = await doc.reference.collection('members').doc('members').get();
+      final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+      final groupLength = emails.length;
+      
       visibleGroups.add(GroupModel(
         id: doc.id,
         name: info['title'] ?? '',
         description: info['description'] ?? '',
-        totalPeople: 0, // TODO
+        totalPeople: groupLength,
         totalPoints: 0, // TODO
         image: info['banner'] ?? '',
       ));
@@ -90,11 +96,17 @@ class GroupRepository {
     for (var doc in privateGroupsSnapshot) {
       final infoSnapshot = await doc.reference.collection('info').doc('info').get();
       final info = infoSnapshot.data() ?? {};
+
+      // Conta número de membros
+      final memberDoc = await doc.reference.collection('members').doc('members').get();
+      final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+      final groupLength = emails.length;
+
       visibleGroups.add(GroupModel(
         id: doc.id,
         name: info['title'] ?? '',
         description: info['description'] ?? '',
-        totalPeople: 0, // TODO
+        totalPeople: groupLength,
         totalPoints: 0, // TODO
         image: info['banner'] ?? '',
       ));
