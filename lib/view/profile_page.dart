@@ -86,10 +86,15 @@ class _ProfileViewState extends State<_ProfileView> {
                       Row(
                         children: [
                           Expanded(
-                            child: TopStatCard(
-                              title: 'Medalhas',
-                              value: '${controller.getTotalMedals()}',
-                            ),
+                            child: StreamBuilder(
+                              stream: controller.getUnlockedMedalsCountStream(), builder: (context, snapshot){
+                                final int count = snapshot.data ?? controller.getTotalMedals();
+                                return TopStatCard(
+                                  title: 'Medalhas',
+                                  value: '$count',
+                                );
+                              },
+                            )
                           ),
                           const SizedBox(width: 10),
                           Expanded(

@@ -8,7 +8,7 @@ class MedalsView extends StatelessWidget {
   const MedalsView({super.key});
 
   Color _getMedalColor(BuildContext context, String type) {
-    switch (type) {
+    switch (type.trim().toLowerCase()) {
       case 'water':
         return AppColors.agua;
       case 'recycle':
@@ -36,13 +36,12 @@ class MedalsView extends StatelessWidget {
         
         // 1. Tratamento de Erro
         if (snapshot.hasError) {
-          print("ERRO DO FIREBASE NO NATURATS: ${snapshot.error}");
+          
           return const Center(
             child: Text('Erro ao carregar suas medalhas.'),
           );
         }
 
-        // 2. Estado de Carregamento (enquanto o Firebase não responde)
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(),
@@ -51,21 +50,19 @@ class MedalsView extends StatelessWidget {
 
         final medals = snapshot.data ?? [];
 
-        // 3. Caso o banco esteja vazio
         if (medals.isEmpty) {
           return const Center(
             child: Text('Nenhuma medalha encontrada.'),
           );
         }
 
-        // 4. Renderização do Grid com os dados reais
         return GridView.builder(
           padding: const EdgeInsets.all(4.0),
           gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: 2,
             crossAxisSpacing: 10.0,
             mainAxisSpacing: 10.0,
-            childAspectRatio: 0.85, // Adicionado para dar mais espaço vertical ao texto do card
+            childAspectRatio: 0.85, 
           ),
           itemCount: medals.length,
           itemBuilder: (context, index) {
@@ -73,7 +70,6 @@ class MedalsView extends StatelessWidget {
             
             return MedalCard(
               medal: medal,
-              // Agora a cor muda dinamicamente dependendo do tipo da medalha!
               color: _getMedalColor(context, medal.type), 
             );
           },

@@ -53,27 +53,34 @@ class ProfileController extends ChangeNotifier {
 
 
   Stream<List<Medal>> getMedalsStream() {
-    return _medalService.getMedalsStream();
+    final int streak = _userRepository.getStreak();
+    final int completedMissionsCount = _userRepository.completedChallenges.length; 
+    
+    
+    final Map<String, int> statsFormatados = {
+      'co2': _userRepository.getStatistics()['co2'] ?? _userRepository.getNumPoints(), // Ajuste conforme seu repositório
+      'water': _userRepository.getStatistics()['water'] ?? 0,
+      'recycled': _userRepository.getStatistics()['recycled'] ?? _userRepository.getStatistics()['recycle'] ?? 0,
+      'km': _userRepository.getStatistics()['km'] ?? 0,
+    };
+
+    return _medalService.getMedalsStream().map((medalList) {
+      for (var medal in medalList) {
+        medal.checkUnlockStatus(statsFormatados, streak, completedMissionsCount);
+      }
+      return medalList;
+    });
   }
 
-  
-  /*
-  List<Medal> getMedals() {
-    return [
-      Medal(
-        icon: Icons.recycling,
-        title: 'Rei da reciclagem',
-        description: 'Recicle 100 itens',
-      ),
-      Medal(
-        icon: Icons.eco,
-        title: 'Habitante da floresta',
-        description: 'Plante uma árvore',
-      ),
-    ];
-  }*/
+  Stream<int> getUnlockedMedalsCountStream() {
+    return getMedalsStream().map((medalList) {
+      return medalList.where((medal) => medal.isUnlocked).length;
+    });
+  }
 
   List<CompletedChallenges> getCompletedChallenges() {
     return _userRepository.completedChallenges;
   }
+
+
 }
