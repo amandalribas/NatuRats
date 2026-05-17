@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:naturats/model/challenge.dart';
+import 'package:naturats/model/challenge_duration.dart';
+import 'package:naturats/model/completed_challenges.dart';
 
 class ChallengesService {
   static String collection = "challenges";
@@ -53,7 +55,7 @@ class ChallengesService {
     }
   }
 
-  Future<List<String>> getAllUsersChallenges(String userId) async {
+  Future<List<String>> getAllUsersChallengesIDs(String userId) async {
     try {
       QuerySnapshot snapshot = await _firestore
           .collection("users")
@@ -72,6 +74,61 @@ class ChallengesService {
     }
   }
 
+  Future<List<String>> getUserActiveChallengesIDs(String userId) async {
+    QuerySnapshot snapshot = await _firestore
+        .collection("users")
+        .doc(userId)
+        .collection(collection)
+        .where('status', isEqualTo: 'active')
+        .get();
+
+    List<String> activeChallengeIds = snapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return data["challenge_id"] as String;
+    }).toList();
+
+    return activeChallengeIds;
+  }
+
+
+  Future<List<CompletedChallenges>> getUserCompletedChallenges(String userId) async {
+    try {
+      // Recupera todos os desafios concluídos do usuário.
+      QuerySnapshot completedChallengesSnapshot = await _firestore
+          .collection("users")
+          .doc(userId)
+          .collection(collection)
+          .where('status', isEqualTo: 'completed')
+          .get();
+
+
+      QuerySnapshot allChallengesSnapshot = await _firestore
+          .collection(collection)
+          .get();
+
+      List<CompletedChallenges> completedChallenges = completedChallengesSnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        String challengeId = data["challenge_id"] as String;
+
+        final challengeData = allChallengesSnapshot.docs.firstWhere((challengeDoc) => challengeDoc.id == challengeId).data() as Map<String, dynamic>;
+        String title = challengeData["title"] as String;
+        int points = ChallengeDuration.fromMap(challengeData["duration"] as String).points;
+        DateTime completedAt = (data["completed_at"] as Timestamp).toDate();
+
+        return CompletedChallenges(
+          title: title,
+          points: points,
+          completedAt: completedAt,
+        );
+      }).toList();
+
+      return completedChallenges;
+    } catch (e) {
+      debugPrint("Error on challenges service, get users completed challenges: $e");
+      return [];
+    }
+  }
+
   Future<void> finishChallenge(String userId, String challengeId) async {
     try {
       final snapshot = await _firestore
@@ -82,7 +139,7 @@ class ChallengesService {
           .get();
 
       for (var doc in snapshot.docs) {
-        await doc.reference.delete();
+        await doc.reference.update({"status": "completed", "completed_at": DateTime.now()});
       }
     } catch (e) {
       debugPrint("Error finishing challenge: $e");

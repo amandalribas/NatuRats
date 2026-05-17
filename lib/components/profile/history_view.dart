@@ -1,13 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:naturats/components/profile/completed_challenge_card.dart';
+import 'package:naturats/model/completed_challenges.dart';
 
 class HistoryView extends StatelessWidget {
-  const HistoryView({super.key});
+  const HistoryView({super.key, required this.completedChallenges});
 
+  final List<CompletedChallenges> completedChallenges;
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.purple.withOpacity(0.1),
-      child: const Center(child: Text('Placeholder Histórico')),
+    return ListView.builder(
+      itemCount: completedChallenges.length,
+      itemBuilder: (context, index) {
+        final challenge = completedChallenges[index];
+        return ChallengeCard(
+          eventTitle: challenge.title,
+          eventDate: challenge.completedAt,
+          pointsEarned: challenge.points,
+        );
+      },
     );
   }
 }

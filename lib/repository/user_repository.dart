@@ -1,17 +1,21 @@
 import 'package:flutter/cupertino.dart';
 import 'package:naturats/model/challenge.dart';
+import 'package:naturats/model/completed_challenges.dart';
 import 'package:naturats/service/auth_service.dart';
+import 'package:naturats/service/challenges_service.dart';
 import 'package:naturats/service/user_service.dart';
 import '../model/user.dart';
 
 class UserRepository extends ChangeNotifier {
   final AuthenticationService _authService = AuthenticationService();
   final UserService _userService = UserService();
+  final ChallengesService _challengesService = ChallengesService();
 
   User? _currentUser;
   bool isSignedIn = false;
   bool isLoading = true;
   String? profilePictureUrl;
+  List<CompletedChallenges> completedChallenges = [];
 
   UserRepository() {
     _initialize();
@@ -22,7 +26,7 @@ class UserRepository extends ChangeNotifier {
       await _getCurrentUserInfo();
       isSignedIn = true;
     }
-
+    await getCompletedChallenges();
     isLoading = false;
     notifyListeners();
   }
@@ -169,4 +173,17 @@ class UserRepository extends ChangeNotifier {
       "km": 0,
     };
 }
+
+  Future<void> getCompletedChallenges() async {
+    final userId = _currentUser?.id;
+    final List<CompletedChallenges> challenges = userId != null ? await _challengesService.getUserCompletedChallenges(userId) : [];
+
+    completedChallenges = challenges.map((c) => CompletedChallenges(
+      title: c.title,
+      points: c.points,
+      completedAt: c.completedAt,
+    )).toList();
+
+    notifyListeners();
+  }
 }

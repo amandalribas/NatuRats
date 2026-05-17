@@ -29,7 +29,7 @@ class ViewSelector extends StatelessWidget {
           case 1:
             return MedalsView();
           default:
-            return HistoryView();
+            return HistoryView(completedChallenges: controller.getCompletedChallenges());
         }
       } (),
     );

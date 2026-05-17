@@ -53,6 +53,8 @@ class HomeController extends ChangeNotifier {
       challenge.id,
     );
 
+    await _userRepository.getCompletedChallenges();
+
     activeChallenges.removeWhere(
       (c) => c.id == challenge.id,
     );

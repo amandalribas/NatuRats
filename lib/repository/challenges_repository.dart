@@ -31,7 +31,8 @@ class ChallengesRepository {
         await _fetchAllChallenges();
       }
 
-      final ids = await _challengesService.getAllUsersChallenges(userId);
+      final ids = await _challengesService.getUserActiveChallengesIDs(userId);
+
       _currentUserActiveChallenges = _challenges.where((challenge) {
         return ids.contains(challenge.id);
       }).toList();
