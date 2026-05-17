@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/model/group_model.dart';
 import 'package:naturats/repository/group_repository.dart';
@@ -12,7 +13,7 @@ class GroupController extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    final groups = await _groupRepository.fetchGroups();
+    final groups = await _groupRepository.fetchVisibleGroups(FirebaseAuth.instance.currentUser!.email!);
     _groups = groups;
 
     isLoading = false;

@@ -42,6 +42,67 @@ class GroupRepository {
     await batch.commit();
   }
 
+  Future<List<GroupModel>> fetchVisibleGroups(String userEmail) async {
+    final firestore = FirebaseFirestore.instance;
+
+    // Busca grupos públicos
+    final publicGroupsSnapshot = await firestore
+        .collection('groups')
+        .where('public', isEqualTo: true)
+        .get();
+    
+    // Busca grupos privados onde o usuário é membro
+    final allPrivateGroupsSnapshot = await firestore
+        .collection('groups')
+        .where('public', isEqualTo: false)
+        .get();
+
+    List<QueryDocumentSnapshot> privateGroupsSnapshot = [];
+    for (var groupDoc in allPrivateGroupsSnapshot.docs) {
+      final memberDoc = await groupDoc.reference
+          .collection('members')
+          .doc('members')
+          .get();
+      
+      if (memberDoc.exists) {
+        final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+        if (emails.contains(userEmail)) {
+          privateGroupsSnapshot.add(groupDoc);
+        }
+      }
+    }
+
+    List<GroupModel> visibleGroups = [];
+
+    for (var doc in publicGroupsSnapshot.docs) {
+      final infoSnapshot = await doc.reference.collection('info').doc('info').get();
+      final info = infoSnapshot.data() ?? {};
+      visibleGroups.add(GroupModel(
+        id: doc.id,
+        name: info['title'] ?? '',
+        description: info['description'] ?? '',
+        totalPeople: 0, // TODO
+        totalPoints: 0, // TODO
+        image: info['banner'] ?? '',
+      ));
+    }
+
+    for (var doc in privateGroupsSnapshot) {
+      final infoSnapshot = await doc.reference.collection('info').doc('info').get();
+      final info = infoSnapshot.data() ?? {};
+      visibleGroups.add(GroupModel(
+        id: doc.id,
+        name: info['title'] ?? '',
+        description: info['description'] ?? '',
+        totalPeople: 0, // TODO
+        totalPoints: 0, // TODO
+        image: info['banner'] ?? '',
+      ));
+    }
+
+    return visibleGroups;
+  }
+
   Future<List<GroupModel>> fetchUserGroups(String userId) async {
     final firestore = FirebaseFirestore.instance;
     final querySnapshot = await firestore
