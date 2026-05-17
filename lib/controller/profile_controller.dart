@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:naturats/model/completed_challenges.dart';
 import 'package:naturats/model/medal.dart';
 import 'package:naturats/repository/user_repository.dart';
+import 'package:naturats/service/medal_service.dart';
 import 'package:provider/provider.dart';
 
 class ProfileController extends ChangeNotifier {
   final BuildContext _context;
   late final UserRepository _userRepository;
+  final MedalService _medalService = MedalService();
   late String? fullName;
 
   ProfileController(this._context) {
@@ -21,7 +23,7 @@ class ProfileController extends ChangeNotifier {
     }
     return null;
   }
- 
+
   int getUserLevel() {
     return _userRepository.getLevel();
   }
@@ -49,13 +51,27 @@ class ProfileController extends ChangeNotifier {
     return _userRepository.getStatistics();
   }
 
-  // TODO
+
+  Stream<List<Medal>> getMedalsStream() {
+    return _medalService.getMedalsStream();
+  }
+
+  
+  /*
   List<Medal> getMedals() {
     return [
-      Medal(icon: Icons.recycling, title: 'Rei da reciclagem', description: 'Recicle 100 itens'),
-      Medal(icon: Icons.eco, title: 'Habitante da floresta', description: 'Plante uma árvore'),
+      Medal(
+        icon: Icons.recycling,
+        title: 'Rei da reciclagem',
+        description: 'Recicle 100 itens',
+      ),
+      Medal(
+        icon: Icons.eco,
+        title: 'Habitante da floresta',
+        description: 'Plante uma árvore',
+      ),
     ];
-  }
+  }*/
 
   List<CompletedChallenges> getCompletedChallenges() {
     return _userRepository.completedChallenges;

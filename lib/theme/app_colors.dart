@@ -29,7 +29,7 @@ class AppColors {
   static const Color residuos = Color(0xFF5ABEA1);
   static const Color mobilidade = Color(0xFF7B6FD0);
   static const Color biodiversidade = Color(0xFF32AD5B);
-  
+  static const Color consistencia = Color.fromARGB(255, 193, 49, 24);
   // Estatísticas
   static const Color statCo2 = Color(0xFF01844B);
   static const Color staAgua = Color(0xFF15A1E6);
