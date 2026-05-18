@@ -5,6 +5,7 @@ import 'package:naturats/components/group/group_options_sheet.dart';
 import 'package:naturats/components/group/group_card.dart';
 import 'package:naturats/controller/group_controller.dart';
 import 'package:naturats/theme/app_colors.dart';
+import 'package:naturats/view/group_form_page.dart';
 
 class GroupPage extends StatefulWidget {
   const GroupPage({super.key});
@@ -22,14 +23,29 @@ class _GroupPageState extends State<GroupPage> {
     _groupController.loadGroups();
   }
 
-  void _showOptions(BuildContext context) {
-    showModalBottomSheet(
+  Future<void> _showOptions(BuildContext context) async {
+    final action = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => const GroupOptionsSheet(),
     );
+
+    if (!context.mounted || action != 'create_group') {
+      return;
+    }
+
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const GroupFormPage(),
+      ),
+    );
+
+    if (created == true) {
+      await _groupController.loadGroups();
+    }
   }
 
   @override

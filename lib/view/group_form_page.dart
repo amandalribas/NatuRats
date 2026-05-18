@@ -24,7 +24,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
     });
   }
 
-  void _handleCreateGroup() {
+  Future<void> _handleCreateGroup() async {
     final name = _nameController.text;
     final description = _descriptionController.text;
 
@@ -35,12 +35,16 @@ class _GroupFormPageState extends State<GroupFormPage> {
       return;
     }
 
-    _groupController.createGroup(
+    await _groupController.createGroup(
       name: name,
       description: description,
       imageBase64: _imageBase64,
       isPublic: _isPublic,
     );
+
+    if (!mounted) return;
+
+    Navigator.pop(context, true);
   }
 
   @override

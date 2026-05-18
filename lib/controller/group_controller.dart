@@ -34,13 +34,13 @@ class GroupController extends ChangeNotifier {
     }).toList();
   }
 
-  void createGroup({
+  Future<void> createGroup({
     required String name,
     required String description,
     required String imageBase64,
     required bool isPublic
   }) {
-    _groupRepository.createGroup(
+    return _groupRepository.createGroup(
       name: name, 
       description: description, 
       imageBase64: imageBase64,
