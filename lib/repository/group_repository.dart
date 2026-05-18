@@ -26,6 +26,7 @@ class GroupRepository {
     final firestore = FirebaseFirestore.instance;
     final groupDoc = firestore.collection('groups').doc();
     final userId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
 
     final batch = firestore.batch();
     batch.set(groupDoc, {'public': isPublic});
@@ -37,6 +38,9 @@ class GroupRepository {
       'title': name,
       'updated_at': FieldValue.serverTimestamp(),
       'updated_by': userId,
+    });
+    batch.set(groupDoc.collection('members').doc('members'), {
+      'emails': [userEmail],
     });
 
     await batch.commit();
@@ -144,9 +148,9 @@ class GroupRepository {
         .doc(groupId)
         .collection('members')
         .doc('members')
-        .update({
+        .set({
       'emails': FieldValue.arrayUnion([email]),
-    });
+    }, SetOptions(merge: true));
   }
 
   Future<String> getGroupName(String groupId) async {
