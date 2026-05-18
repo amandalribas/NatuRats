@@ -136,4 +136,29 @@ class GroupRepository {
       );
     }));
   }
+
+  Future<void> addMemberToGroup(String groupId, String email) async {
+    final firestore = FirebaseFirestore.instance;
+    await firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('members')
+        .doc('members')
+        .update({
+      'emails': FieldValue.arrayUnion([email]),
+    });
+  }
+
+  Future<String> getGroupName(String groupId) async {
+    final firestore = FirebaseFirestore.instance;
+    final infoSnapshot = await firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('info')
+        .doc('info')
+        .get();
+
+    final info = infoSnapshot.data() ?? {};
+    return info['title'] ?? '';
+  }
 }

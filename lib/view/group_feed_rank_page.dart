@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:naturats/components/group/group_details_header.dart';
 import 'package:naturats/components/group/group_navigation_tabs.dart';
 import 'package:naturats/components/group/gallery_image_picker.dart';
+import 'package:naturats/components/group/invite_member_dialog.dart';
 import 'package:naturats/model/group_activity.dart';
 
 import 'package:naturats/view/activity_detail_page.dart';
@@ -222,6 +223,16 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
             imageUrl: widget.imageUrl,
             people: widget.totalPeople,
             points: widget.totalPoints,
+            onInvite: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (_) => InviteMemberDialog(groupId: widget.id),
+              );
+            },
           ),
           GroupNavigationTabs(
             currentIndex: selectedIndex,

@@ -5,6 +5,7 @@ class GroupDetailsHeader extends StatelessWidget {
   final String imageUrl;
   final int people;
   final int points;
+  final VoidCallback? onInvite;
 
   const GroupDetailsHeader({
     super.key,
@@ -12,6 +13,7 @@ class GroupDetailsHeader extends StatelessWidget {
     required this.imageUrl,
     required this.people,
     required this.points,
+    this.onInvite,
   });
 
   @override
@@ -36,14 +38,27 @@ class GroupDetailsHeader extends StatelessWidget {
           ),
         ),
 
-        // BOTÃO VOLTAR
+        // BOTÃO VOLTAR + CONVIDAR
         SafeArea(
-          child: IconButton(
-            icon: const Icon(
-              Icons.arrow_back,
-              color: Colors.white,
-            ),
-            onPressed: () => Navigator.pop(context),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.arrow_back,
+                  color: Colors.white,
+                ),
+                onPressed: () => Navigator.pop(context),
+              ),
+              if (onInvite != null)
+                IconButton(
+                  icon: const Icon(
+                    Icons.person_add,
+                    color: Colors.white,
+                  ),
+                  onPressed: onInvite,
+                ),
+            ],
           ),
         ),
 

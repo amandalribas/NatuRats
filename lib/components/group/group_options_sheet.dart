@@ -12,13 +12,6 @@ class GroupOptionsSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         
         children: [
-          // opção de entrar num grupo com o ID
-          ListTile(
-            leading: const Icon(Icons.login),
-            title: const Text("Entrar com ID"),
-            onTap: () => Navigator.pop(context),
-          ),
-          
           // oção de criar um novo grupo
           ListTile(
             leading: const Icon(Icons.group_add),
