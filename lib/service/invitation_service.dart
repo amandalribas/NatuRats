@@ -59,4 +59,15 @@ class InvitationService {
       return false;
     }
   }
+
+  /// Stream de convites filtrados por destinatário, em tempo real.
+  Stream<List<Invitation>> streamByRecipient(String email) {
+    return _firestore
+        .collection(collection)
+        .where('recipient', isEqualTo: email)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Invitation.fromMap(doc.id, doc.data()))
+            .toList());
+  }
 }

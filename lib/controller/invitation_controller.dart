@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:naturats/model/invitation.dart';
 import 'package:naturats/repository/group_repository.dart';
 import 'package:naturats/service/invitation_service.dart';
@@ -10,6 +11,7 @@ class InvitationController extends ChangeNotifier {
 
   List<Invitation> _invitations = [];
   bool isLoading = false;
+  StreamSubscription<List<Invitation>>? _subscription;
 
   List<Invitation> get invitations => _invitations;
 
@@ -26,23 +28,26 @@ class InvitationController extends ChangeNotifier {
       return;
     }
 
-    final allInvitations = await _invitationService.getByRecipient(email);
+    // Cancela subscription anterior (se houver) e assina o stream em tempo real
+    await _subscription?.cancel();
+    _subscription = _invitationService.streamByRecipient(email).listen((allInvitations) async {
+      final now = DateTime.now();
+      final valid = <Invitation>[];
 
-    // Filtra convites expirados e os deleta automaticamente
-    final now = DateTime.now();
-    final valid = <Invitation>[];
-
-    for (final inv in allInvitations) {
-      if (inv.deadline.isBefore(now)) {
-        await _invitationService.delete(inv.id);
-      } else {
-        valid.add(inv);
+      for (final inv in allInvitations) {
+        if (inv.deadline.isBefore(now)) {
+          await _invitationService.delete(inv.id);
+        } else {
+          valid.add(inv);
+        }
       }
-    }
 
-    _invitations = valid;
-    isLoading = false;
-    notifyListeners();
+      _invitations = valid;
+      isLoading = false;
+      notifyListeners();
+    }, onError: (e) {
+      debugPrint('Error on invitations stream: $e');
+    });
   }
 
   Future<void> sendInvitation(String recipientEmail, String groupId) async {
@@ -89,6 +94,12 @@ class InvitationController extends ChangeNotifier {
 
     _invitations.removeWhere((i) => i.id == inv.id);
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   /// Retorna o nome do grupo a partir do seu ID

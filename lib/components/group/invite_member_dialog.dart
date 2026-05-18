@@ -51,6 +51,7 @@ class _InviteMemberDialogState extends State<InviteMemberDialog> {
   @override
   void dispose() {
     _emailController.dispose();
+    _invitationController.dispose();
     super.dispose();
   }
 

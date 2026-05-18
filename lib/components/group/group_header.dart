@@ -19,6 +19,12 @@ class _GroupHeaderState extends State<GroupHeader> {
     _invitationController.loadInvitations();
   }
 
+  @override
+  void dispose() {
+    _invitationController.dispose();
+    super.dispose();
+  }
+
   void _showInvitationsPopup(BuildContext context) async {
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RenderBox overlay =
@@ -125,6 +131,8 @@ class _GroupHeaderState extends State<GroupHeader> {
                             color: AppColors.branco,
                             size: 28,
                           ),
+                          padding: const EdgeInsets.all(12),
+                          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                         );
                       },
                     ),
@@ -132,24 +140,28 @@ class _GroupHeaderState extends State<GroupHeader> {
                       Positioned(
                         right: 6,
                         top: 6,
-                        child: Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          constraints: const BoxConstraints(
-                            minWidth: 18,
-                            minHeight: 18,
-                          ),
-                          child: Text(
-                            '${_invitationController.pendingCount}',
-                            style: const TextStyle(
-                              color: AppColors.branco,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                        child: IgnorePointer(
+                          // Impede que o badge capture toques e bloqueie o IconButton abaixo
+                          ignoring: true,
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
                             ),
-                            textAlign: TextAlign.center,
+                            constraints: const BoxConstraints(
+                              minWidth: 18,
+                              minHeight: 18,
+                            ),
+                            child: Text(
+                              '${_invitationController.pendingCount}',
+                              style: const TextStyle(
+                                color: AppColors.branco,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                       ),
