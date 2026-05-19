@@ -3,6 +3,23 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:naturats/model/group_model.dart';
 
 class GroupRepository {
+  Future<bool> isUserMember(String groupId, String email) async {
+    final firestore = FirebaseFirestore.instance;
+    final memberDoc = await firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('members')
+        .doc('members')
+        .get();
+
+    if (!memberDoc.exists) {
+      return false;
+    }
+
+    final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+    return emails.contains(email);
+  }
+
   Future<List<GroupModel>> fetchGroups() async {
     final firestore = FirebaseFirestore.instance;
     final querySnapshot = await firestore.collection('groups').get();

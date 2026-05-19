@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
-import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:naturats/model/group_model.dart';
+import 'package:naturats/repository/group_repository.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/group_feed_rank_page.dart';
+import 'package:naturats/view/group_join_page.dart';
+import 'package:naturats/utils/base64_image.dart';
 
 class GroupCard extends StatelessWidget {
   final GroupModel group;
@@ -15,23 +17,44 @@ class GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final imageBytes = _decodeBase64Image(group.image);
+    final imageBytes = decodeBase64Image(group.image);
 
     return Center(
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: () {
+        onTap: () async {
+          final groupRepository = GroupRepository();
+          final userEmail = FirebaseAuth.instance.currentUser?.email;
+
+          if (userEmail == null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GroupJoinPage(group: group),
+              ),
+            );
+            return;
+          }
+
+          final isMember = await groupRepository.isUserMember(group.id, userEmail);
+
+          if (!context.mounted) {
+            return;
+          }
+
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => GroupFeedRankPage(
-                id: group.id,
-                name: group.name,
-                description: group.description,
-                totalPeople: group.totalPeople,
-                totalPoints: group.totalPoints,
-                imageUrl: group.image,
-              ),
+              builder: (context) => isMember
+                  ? GroupFeedRankPage(
+                      id: group.id,
+                      name: group.name,
+                      description: group.description,
+                      totalPeople: group.totalPeople,
+                      totalPoints: group.totalPoints,
+                      imageUrl: group.image,
+                    )
+                  : GroupJoinPage(group: group),
             ),
           );
         },
@@ -128,17 +151,4 @@ class GroupCard extends StatelessWidget {
     );
   }
 
-  Uint8List? _decodeBase64Image(String value) {
-    if (value.isEmpty) {
-      return null;
-    }
-
-    final normalizedValue = value.contains(',') ? value.split(',').last : value;
-
-    try {
-      return base64Decode(normalizedValue);
-    } catch (_) {
-      return null;
-    }
-  }
 }
