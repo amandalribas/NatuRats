@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:naturats/components/group/group_details_header.dart';
 import 'package:naturats/components/group/group_navigation_tabs.dart';
 import 'package:naturats/components/group/gallery_image_picker.dart';
@@ -41,6 +41,13 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final Map<String, Uint8List> _imageCache = {};
 
+// Decode base64 in an isolate to avoid blocking the UI thread.
+Uint8List _decodeBase64Isolate(String data) {
+  final comma = data.indexOf(',');
+  final payload = comma != -1 ? data.substring(comma + 1) : data;
+  return base64Decode(payload);
+}
+
   Stream<List<GroupActivity>> _activitiesStream() {
     return _firestore
         .collection('groups')
@@ -66,10 +73,10 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
   }
 
   void _showNewActivitySheet() {
-    final _titleCtrl = TextEditingController();
-    final _descCtrl = TextEditingController();
-    String? _missionType;
-    String _imageBase64 = '';
+    final titleCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    String? missionType;
+    String imageBase64Local = '';
 
     final List<String> missionTypes = [
       'biodiversidade', 'água', 'energia', 'resíduo', 'mobilidade'
@@ -89,50 +96,50 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
-                  controller: _titleCtrl,
+                  controller: titleCtrl,
                   decoration: InputDecoration(labelText: 'Título'),
                 ),
                 TextField(
-                  controller: _descCtrl,
+                  controller: descCtrl,
                   decoration: InputDecoration(labelText: 'Descrição'),
                   maxLines: 3,
                 ),
                 DropdownButtonFormField<String>(
-                  value: _missionType,
+                  initialValue: missionType,
                   items: missionTypes
                       .map((m) => DropdownMenuItem(value: m, child: Text(m)))
                       .toList(),
-                  onChanged: (val) => setModalState(() => _missionType = val),
+                  onChanged: (val) => setModalState(() => missionType = val),
                   decoration: InputDecoration(labelText: 'Tipo de missão'),
                 ),
                 const SizedBox(height: 12),
                 GalleryImagePicker(
                   onImageSelected: (base64Image) {
-                    setModalState(() => _imageBase64 = base64Image);
+                    setModalState(() => imageBase64Local = base64Image);
                   },
                 ),
-                if (_imageBase64.isNotEmpty)
+                if (imageBase64Local.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 8),
                     child: Image.memory(
-                      base64Decode(_imageBase64),
+                      base64Decode(imageBase64Local),
                       height: 100, width: 100, fit: BoxFit.cover,
                     ),
                   ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () {
-                    if (_titleCtrl.text.isEmpty || _missionType == null) {
+                    onPressed: () {
+                      if (titleCtrl.text.isEmpty || missionType == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Preencha título e tipo de missão')),
                       );
                       return;
                     }
                     _createActivity(
-                      title: _titleCtrl.text,
-                      description: _descCtrl.text,
-                      missionType: _missionType!,
-                      imageBase64: _imageBase64,
+                      title: titleCtrl.text,
+                      description: descCtrl.text,
+                      missionType: missionType!,
+                      imageBase64: imageBase64Local,
                     );
                     Navigator.pop(ctx);
                   },
@@ -194,11 +201,11 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
     }
   }
 
-  Uint8List? _getDecodedImage(String? base64) {
+  Future<Uint8List?> _getDecodedImage(String? base64) async {
     if (base64 == null || base64.isEmpty) return null;
     if (_imageCache.containsKey(base64)) return _imageCache[base64];
     try {
-      final bytes = base64Decode(base64);
+      final bytes = await compute(_decodeBase64Isolate, base64);
       _imageCache[base64] = bytes;
       return bytes;
     } catch (_) {
@@ -278,79 +285,85 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
           itemBuilder: (context, index) {
             final activity = activities[index];
             final isMe = (activity.senderId == _auth.currentUser?.uid);
-            final decodedImage = _getDecodedImage(activity.photoBase64);
 
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              elevation: 2,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ActivityDetailPage(
-                      activity: activity,
-                      groupId: widget.id,   // ← essencial
+            return FutureBuilder<Uint8List?>(
+              future: _getDecodedImage(activity.photoBase64),
+              builder: (context, snap) {
+                final decodedImage = snap.data;
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ActivityDetailPage(
+                            activity: activity,
+                            groupId: widget.id,   // ← essencial
+                          ),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: isMe ? Colors.green : Colors.grey,
+                                backgroundImage: decodedImage != null ? MemoryImage(decodedImage) : null,
+                                child: decodedImage == null
+                                    ? Text(
+                                        activity.senderName.isNotEmpty
+                                            ? activity.senderName[0].toUpperCase()
+                                            : '?',
+                                        style: const TextStyle(color: Colors.white),
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  activity.senderName,
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Text(
+                                activity.createdAt != null ? _formatTime(activity.createdAt!) : '',
+                                style: const TextStyle(fontSize: 12, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            activity.title,
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 4),
+                          if (activity.description.isNotEmpty) Text(activity.description),
+                          const SizedBox(height: 8),
+                          Chip(
+                            backgroundColor: _missionColor(activity.missionType).withOpacity(0.2),
+                            label: Text(
+                              activity.missionType,
+                              style: TextStyle(
+                                color: _missionColor(activity.missionType),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: isMe ? Colors.green : Colors.grey,
-                            backgroundImage: decodedImage != null ? MemoryImage(decodedImage) : null,
-                            child: decodedImage == null
-                                ? Text(
-                                    activity.senderName.isNotEmpty
-                                        ? activity.senderName[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              activity.senderName,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Text(
-                            activity.createdAt != null ? _formatTime(activity.createdAt!) : '',
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        activity.title,
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 4),
-                      if (activity.description.isNotEmpty) Text(activity.description),
-                      const SizedBox(height: 8),
-                      Chip(
-                        backgroundColor: _missionColor(activity.missionType).withOpacity(0.2),
-                        label: Text(
-                          activity.missionType,
-                          style: TextStyle(
-                            color: _missionColor(activity.missionType),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             );
           },
         );
