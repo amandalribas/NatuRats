@@ -225,7 +225,29 @@ Uint8List _decodeBase64Isolate(String data) {
           : null,
       body: Column(
         children: [
-          GroupDetailsHeader(
+          _header(),
+          _navigationTabs(),
+          Expanded(
+            child: selectedIndex == 0 ? _buildFeed() : _buildRank(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _navigationTabs() {
+    return GroupNavigationTabs(
+            currentIndex: selectedIndex,
+            onChanged: (index) {
+              setState(() {
+                selectedIndex = index;
+              });
+            },
+          );
+  }
+
+  Widget _header() {
+    return GroupDetailsHeader(
             name: widget.name,
             imageUrl: widget.imageUrl,
             people: widget.totalPeople,
@@ -240,21 +262,7 @@ Uint8List _decodeBase64Isolate(String data) {
                 builder: (_) => InviteMemberDialog(groupId: widget.id),
               );
             },
-          ),
-          GroupNavigationTabs(
-            currentIndex: selectedIndex,
-            onChanged: (index) {
-              setState(() {
-                selectedIndex = index;
-              });
-            },
-          ),
-          Expanded(
-            child: selectedIndex == 0 ? _buildFeed() : _buildRank(),
-          ),
-        ],
-      ),
-    );
+          );
   }
 
   Widget _buildFeed() {

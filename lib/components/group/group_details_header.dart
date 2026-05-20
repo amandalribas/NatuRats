@@ -1,7 +1,18 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-class GroupDetailsHeader extends StatelessWidget {
+// Simple global cache to avoid re-decoding the same base64 repeatedly.
+final Map<String, Uint8List> _groupHeaderImageCache = {};
+
+// Top-level isolate-safe decoder for compute
+Uint8List _decodeBase64Isolate(String data) {
+  final comma = data.indexOf(',');
+  final payload = comma != -1 ? data.substring(comma + 1) : data;
+  return base64Decode(payload);
+}
+
+class GroupDetailsHeader extends StatefulWidget {
   final String name;
   final String imageUrl;
   final int people;
@@ -18,44 +29,100 @@ class GroupDetailsHeader extends StatelessWidget {
   });
 
   @override
+  State<GroupDetailsHeader> createState() => _GroupDetailsHeaderState();
+}
+
+class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
+  Uint8List? _bytes;
+  bool _decoding = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureImageDecoded();
+  }
+
+  @override
+  void didUpdateWidget(covariant GroupDetailsHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.imageUrl != widget.imageUrl) {
+      _ensureImageDecoded();
+    }
+  }
+
+  void _ensureImageDecoded() {
+    final imageUrl = widget.imageUrl;
+    if (imageUrl.isEmpty) {
+      setState(() {
+        _bytes = null;
+      });
+      return;
+    }
+
+    // If cached, use it immediately
+    if (_groupHeaderImageCache.containsKey(imageUrl)) {
+      setState(() {
+        _bytes = _groupHeaderImageCache[imageUrl];
+      });
+      return;
+    }
+
+    // Determine if the string looks like base64/data-uri
+    final isDataUri = imageUrl.startsWith('data:image');
+    final isLikelyBase64 = isDataUri || (RegExp(r'^[A-Za-z0-9+/=\s]+$').hasMatch(imageUrl) && imageUrl.length > 200);
+
+    if (!isLikelyBase64) {
+      setState(() {
+        _bytes = null;
+      });
+      return;
+    }
+
+    // decode in isolate
+    if (_decoding) return;
+    _decoding = true;
+    compute(_decodeBase64Isolate, imageUrl).then((result) {
+      _groupHeaderImageCache[imageUrl] = result;
+      if (mounted) {
+        setState(() {
+          _bytes = result;
+          _decoding = false;
+        });
+      }
+    }).catchError((_) {
+      if (mounted) {
+        setState(() {
+          _bytes = null;
+          _decoding = false;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // IMAGEM (suporta URL ou base64). Reduz decode via cacheWidth/cacheHeight e mostra placeholder em erro.
+        // IMAGEM (suporta URL ou base64). Usa cache e decode em isolate para evitar repaints/piscar.
         SizedBox(
           height: 180,
           width: double.infinity,
-          child: Builder(builder: (context) {
-            try {
-              final isDataUri = imageUrl.startsWith('data:image');
-              final isBase64 = isDataUri || imageUrl.contains(RegExp(r'^[A-Za-z0-9+/=\s]+$')) && imageUrl.length > 200;
-
-              if (isDataUri || isBase64) {
-                final comma = imageUrl.indexOf(',');
-                final payload = comma != -1 ? imageUrl.substring(comma + 1) : imageUrl;
-                final bytes = base64Decode(payload);
-                return Image.memory(
-                  bytes,
+          child: _bytes != null
+              ? Image.memory(
+                  _bytes!,
                   fit: BoxFit.cover,
-                  // request a smaller decoded image to save memory/time
                   cacheWidth: 1200,
                   filterQuality: FilterQuality.low,
                   errorBuilder: (context, error, stack) => Container(color: Colors.grey[300]),
-                );
-              }
-              // Não usamos imagens remotas; se não for base64, mostrar placeholder
-              return Container(color: Colors.grey[300]);
-            } catch (_) {
-              return Container(color: Colors.grey[300]);
-            }
-          }),
+                )
+              : Container(color: Colors.grey[300]),
         ),
 
         // ESCURECER
         Container(
           height: 180,
           decoration: BoxDecoration(
-            color: Color.fromRGBO(0, 0, 0, 0.45),
+            color: const Color.fromRGBO(0, 0, 0, 0.45),
           ),
         ),
 
@@ -71,13 +138,13 @@ class GroupDetailsHeader extends StatelessWidget {
                 ),
                 onPressed: () => Navigator.pop(context),
               ),
-              if (onInvite != null)
+              if (widget.onInvite != null)
                 IconButton(
                   icon: const Icon(
                     Icons.person_add,
                     color: Colors.white,
                   ),
-                  onPressed: onInvite,
+                  onPressed: widget.onInvite,
                 ),
             ],
           ),
@@ -92,7 +159,7 @@ class GroupDetailsHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                name,
+                widget.name,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 22,
@@ -104,21 +171,19 @@ class GroupDetailsHeader extends StatelessWidget {
 
               Row(
                 children: [
-                  const Icon(Icons.group,
-                      color: Colors.white, size: 14),
+                  const Icon(Icons.group, color: Colors.white, size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    "$people",
+                    "${widget.people}",
                     style: const TextStyle(color: Colors.white),
                   ),
 
                   const SizedBox(width: 12),
 
-                  const Icon(Icons.emoji_events,
-                      color: Colors.white, size: 14),
+                  const Icon(Icons.emoji_events, color: Colors.white, size: 14),
                   const SizedBox(width: 4),
                   Text(
-                    "$points",
+                    "${widget.points}",
                     style: const TextStyle(color: Colors.white),
                   ),
                 ],
