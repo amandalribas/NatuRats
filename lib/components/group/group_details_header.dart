@@ -67,9 +67,8 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
       return;
     }
 
-    // Determine if the string looks like base64/data-uri
     final isDataUri = imageUrl.startsWith('data:image');
-    final isLikelyBase64 = isDataUri || (RegExp(r'^[A-Za-z0-9+/=\s]+$').hasMatch(imageUrl) && imageUrl.length > 200);
+    final isLikelyBase64 = isDataUri || imageUrl.length > 200;
 
     if (!isLikelyBase64) {
       setState(() {
