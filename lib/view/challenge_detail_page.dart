@@ -5,6 +5,7 @@ import 'package:naturats/components/custom_dialog.dart';
 import 'package:naturats/model/challenge.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../controller/challenges_controller.dart';
 
@@ -13,8 +14,16 @@ class DetailChallengeBox extends StatelessWidget {
 
   const DetailChallengeBox({
     super.key,
-    required this.challenge
+    required this.challenge,
   });
+
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +43,7 @@ class DetailChallengeBox extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //cabecalho
+            // cabeçalho
             Row(
               children: [
                 Container(
@@ -63,14 +72,11 @@ class DetailChallengeBox extends StatelessWidget {
                           color: AppColors.preto,
                         ),
                       ),
-                      const SizedBox(
-                        height: 8,
-                      ), // Aumentei um pouco o espaço para as tags
-                      // --- TAGS DE CATEGORIA E SUB CATEGORIA ---
+                      const SizedBox(height: 8),
                       Row(
                         children: [
                           CategoryTag(category: challenge.duration),
-                          const SizedBox(width: 4), // Espaço entre as tags
+                          const SizedBox(width: 4),
                           CategoryTag(category: challenge.type),
                         ],
                       ),
@@ -80,14 +86,13 @@ class DetailChallengeBox extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            //Divider(color: Colors.grey.withValues(alpha: 0.7)),
             Divider(color: AppColors.borderCinza, thickness: 1),
 
+            // Conteúdo rolável
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
-                  crossAxisAlignment:
-                  CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
                     Text(
@@ -95,8 +100,7 @@ class DetailChallengeBox extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.black87,
-                        fontWeight:
-                        FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                         height: 1.5,
                       ),
                     ),
@@ -105,8 +109,7 @@ class DetailChallengeBox extends StatelessWidget {
                       "Sobre o desafio",
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight:
-                        FontWeight.bold,
+                        fontWeight: FontWeight.bold,
                         color: AppColors.preto,
                       ),
                     ),
@@ -124,12 +127,54 @@ class DetailChallengeBox extends StatelessWidget {
                       map: challenge.statistics,
                     ),
                     const SizedBox(height: 20),
+
+                    // ---------- SEÇÃO SAIBA MAIS ----------
+                    if (challenge.info != null && challenge.info!.isNotEmpty) ...[
+                      const Text(
+                        "Saiba mais",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.preto,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ...challenge.info!.map(
+                        (link) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: InkWell(
+                            onTap: () => _launchUrl(link),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.link,
+                                  size: 18,
+                                  color: AppColors.buttomVerde,
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    link,
+                                    style: const TextStyle(
+                                      decoration: TextDecoration.underline,
+                                      color: AppColors.buttomVerde,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                   ],
                 ),
               ),
             ),
 
-            // botao adicionar
+            // botão adicionar
             Padding(
               padding: const EdgeInsets.only(bottom: 30),
               child: SizedBox(
@@ -142,14 +187,15 @@ class DetailChallengeBox extends StatelessWidget {
                       builder: (context) {
                         return CustomDialog(
                           title: "Iniciar Desafio",
-                          desc: "Tem certeza de que deseja iniciar este desafio?",
+                          desc:
+                              "Tem certeza de que deseja iniciar este desafio?",
                           primaryButtonText: "Confirmar",
                           primaryButtonColor: AppColors.bgVerde,
                           onConfirm: () {
                             controller.addChallengeToUserLibrary(challenge.id);
-                          }
+                          },
                         );
-                      }
+                      },
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -162,7 +208,8 @@ class DetailChallengeBox extends StatelessWidget {
                   ),
                   child: const Text(
                     "Iniciar desafio",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
