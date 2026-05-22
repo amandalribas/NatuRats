@@ -33,11 +33,6 @@ class ProfileController extends ChangeNotifier {
   }
 
   // TODO
-  int getTotalMedals() {
-    return _userRepository.getNumMedals();
-  }
-
-  // TODO
   int getSequence() {
     return _userRepository.getStreak();
   }
@@ -51,26 +46,30 @@ class ProfileController extends ChangeNotifier {
     return _userRepository.getStatistics();
   }
 
+  int getTotalMedals() => _userRepository.getNumMedals();
 
   Stream<List<Medal>> getMedalsStream() {
+  return _medalService.getMedalsStream().map((medalList) {
     final int streak = _userRepository.getStreak();
-    final int completedMissionsCount = _userRepository.completedChallenges.length; 
-    
-    
+    final int completedMissionsCount =
+        _userRepository.completedChallenges.length;
+    final stats = _userRepository.getStatistics();
+
+    // Preserva 'CO2' maiúsculo (como vem do Firestore/challenge.statistics)
     final Map<String, int> statsFormatados = {
-      'co2': _userRepository.getStatistics()['co2'] ?? _userRepository.getNumPoints(), // Ajuste conforme seu repositório
-      'water': _userRepository.getStatistics()['water'] ?? 0,
-      'recycled': _userRepository.getStatistics()['recycled'] ?? _userRepository.getStatistics()['recycle'] ?? 0,
-      'km': _userRepository.getStatistics()['km'] ?? 0,
+      'CO2': stats['CO2'] ?? stats['co2'] ?? 0,
+      'co2': stats['co2'] ?? stats['CO2'] ?? 0,
+      'water': stats['water'] ?? 0,
+      'recycled': stats['recycled'] ?? 0,
+      'km': stats['km'] ?? 0,
     };
 
-    return _medalService.getMedalsStream().map((medalList) {
-      for (var medal in medalList) {
-        medal.checkUnlockStatus(statsFormatados, streak, completedMissionsCount);
-      }
-      return medalList;
-    });
-  }
+    for (var medal in medalList) {
+      medal.checkUnlockStatus(statsFormatados, streak, completedMissionsCount);
+    }
+    return medalList;
+  });
+}
 
   Stream<int> getUnlockedMedalsCountStream() {
     return getMedalsStream().map((medalList) {
@@ -81,6 +80,4 @@ class ProfileController extends ChangeNotifier {
   List<CompletedChallenges> getCompletedChallenges() {
     return _userRepository.completedChallenges;
   }
-
-
 }

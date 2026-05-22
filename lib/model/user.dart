@@ -11,7 +11,7 @@ class User {
   int numMedals;
   int numMissions;
   int streak;
-  Map<String,int>? statistics;
+  Map<String, int>? statistics;
 
   User({
     required this.id,
@@ -25,7 +25,6 @@ class User {
     required this.numMissions,
     required this.streak,
     required this.statistics,
-
   });
 
   Map<String, dynamic> toMap() {
@@ -40,11 +39,21 @@ class User {
       "num_missions": numMissions,
       "streak": streak,
       "statistics": statistics,
-       
     };
   }
 
   factory User.fromMap(String uid, Map<String, dynamic> map) {
+    final rawStats =
+        map["statistics"] as Map<String, dynamic>? ??
+        {"CO2": 0, "water": 0, "recycled": 0, "km": 0};
+
+    // Converte valores string para int (ex: "4000" → 4000)
+    final statistics = rawStats.map((key, value) {
+      final intValue =
+          int.tryParse(value.toString()) ?? (value is int ? value : 0);
+      return MapEntry(key, intValue);
+    });
+
     return User(
       id: uid,
       email: map["email"],
@@ -56,12 +65,9 @@ class User {
       numMedals: map["num_medals"] ?? 0,
       numMissions: map["num_missions"] ?? 0,
       streak: map["streak"] ?? 0,
-      statistics: Map<String, int>.from(map["statistics"] ?? {
-        "CO2": 0,
-        "water": 0,
-        "recycled": 0,
-        "km": 0,
-        },),
+      statistics: Map<String, int>.from(
+        map["statistics"] ?? {"CO2": 0, "water": 0, "recycled": 0, "km": 0},
+      ),
     );
   }
 }

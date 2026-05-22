@@ -21,7 +21,7 @@ class ViewSelector extends StatelessWidget {
         switch (_selectedIndex) {
           case 0:
             return StatisticsView(
-              co2: statistics['co2'] ?? 0,
+              co2: statistics['CO2'] ?? 0,
               recycled: statistics['recycled'] ?? 0,
               water: statistics['water'] ?? 0,
               km: statistics['km'] ?? 0,

@@ -7,17 +7,14 @@ class MedalService {
 
   final String _collectionName = 'medals';
 
-  // Retorna um Stream de uma lista de Medalhas.
-  // O Stream escuta o Firestore em tempo real. Se qualquer dado mudar lá,
-  // a tela atualizará sozinha automaticamente.
+  
   Stream<List<Medal>> getMedalsStream() {
     return _firestore
         .collection(_collectionName)
-        .snapshots() // Tira uma "foto" em tempo real da coleção
+        .snapshots() 
         .map((snapshot) {
-          // Mapeia cada documento retornado para o nosso modelo Medal
           return snapshot.docs.map((doc) {
-            // Passamos o doc.id (gerado automaticamente) e os dados do corpo (doc.data())
+            
             return Medal.fromMap(doc.id, doc.data());
           }).toList();
         });

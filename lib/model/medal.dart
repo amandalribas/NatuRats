@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
 class Medal {
-  //IconData icon;
   final String id;
   String title;
   String description;
-  String type; // mobility, recycle, water, energy, consistency
-  bool isUnlocked; //controlando se o usuário já possui ou nao
+  String type;
+  bool isUnlocked;
 
   Medal({
-    //required this.icon,
     required this.id,
     required this.title,
     required this.description,
@@ -18,18 +16,12 @@ class Medal {
   });
 
   Map<String, dynamic> toMap() {
-    return {
-      //"icon": icon,
-      "title": title,
-      "description": description,
-      "type": type,
-    };
+    return {"title": title, "description": description, "type": type};
   }
 
   factory Medal.fromMap(String id, Map<String, dynamic> map) {
     return Medal(
       id: id,
-      //icon: map["icon"],
       title: map["title"] ?? '',
       type: map["type"] ?? "water",
       description: map["description"] ?? '',
@@ -38,71 +30,91 @@ class Medal {
   }
 
   IconData getIcon() {
-    switch (type) {
+    switch (type.trim().toLowerCase()) {
       case 'water':
-        return Icons.water_drop; 
+        return Icons.water_drop;
       case 'recycle':
         return Icons.recycling;
       case 'energy':
-        return Icons.bolt; 
+        return Icons.bolt;
       case 'mobility':
         return Icons.directions_run;
       case 'consistency':
         return Icons.calendar_month;
       default:
-        return Icons.emoji_events; 
+        return Icons.emoji_events;
     }
   }
 
-  void checkUnlockStatus(Map<String, int> userStats, int currentStreak, int completedMissionsCount) {
-    final int requirement = _extractRequirement(title);
+  /// Requisitos fixos por título (trim para remover espaços extras do Firestore)
+  static const Map<String, int> _requirements = {
+    // water
+    'Primeiras Gotas': 100,
+    'Guardião da Água': 500,
+    'Mestre da Economia': 1000,
+    // recycle
+    'Reciclador iniciante': 100,
+    'Herói da Reciclagem': 500,
+    'Lenda sustentável': 1000,
+    // energy (CO2 em gramas no Firestore → comparar com kg)
+    'Menos Carbono': 10,
+    'Ar mais Limpo': 50,
+    'Impacto Verde': 100,
+    // mobility
+    'Primeiros Passos': 50,
+    'Mobilidade Consciente': 100,
+    'Eco viajante': 500,
+    // consistency (streak)
+    'Semana Sustentável': 7,
+    'Compromisso Verde': 30,
+    // missions
+    'Semente Verde': 1,
+    'Amigo do Planeta': 15,
+    'Mestre das Missões': 100,
+  };
 
-    // Normaliza o tipo para evitar que espaços ou maiúsculas quebrem o switch
+  int get requirement {
+    final trimmed = title.trim();
+    return _requirements[trimmed] ?? 1;
+  }
+
+  void checkUnlockStatus(
+    Map<String, int> userStats,
+    int currentStreak,
+    int completedMissionsCount,
+  ) {
+    final int req = requirement;
+
+    // Títulos que usam streak (dias seguidos)
+    const streakTitles = {'Semana Sustentável', 'Compromisso Verde'};
+
     switch (type.trim().toLowerCase()) {
       case 'water':
-        final waterSaved = userStats['water'] ?? 0; 
-        isUnlocked = waterSaved >= requirement;
+        isUnlocked = (userStats['water'] ?? 0) >= req;
         break;
-
       case 'recycle':
-        final itemsRecycled = userStats['recycled'] ?? userStats['recycle'] ?? 0; // Aceita as duas variantes
-        isUnlocked = itemsRecycled >= requirement;
+        isUnlocked = (userStats['recycled'] ?? 0) >= req;
         break;
-
-      case 'energy': 
-      case 'co2': // Agora aceita 'co2' vindo do seu repositório/view
-        final co2Avoided = userStats['co2'] ?? userStats['energy'] ?? 0;
-        
-        // Se no repositório o CO2 estiver salvo em gramas (como sugere a sua View: co2 / 1000), 
-        // e o título da medalha exigir "kg" (ex: 5 kg), fazemos a conversão automática aqui:
-        final currentCo2InKg = co2Avoided >= 1000 ? (co2Avoided / 1000).floor() : co2Avoided;
-        
-        isUnlocked = (co2Avoided >= requirement) || (currentCo2InKg >= requirement);
+      case 'energy':
+        final int co2Grams = userStats['CO2'] ?? userStats['co2'] ?? 0;
+        final int co2Kg = (co2Grams / 1000).floor();
+        isUnlocked = co2Kg >= req;
         break;
-
-      case 'mobility': 
-      case 'km': // Agora aceita 'km' vindo do seu repositório/view
-        final kmSustained = userStats['km'] ?? userStats['mobility'] ?? 0;
-        isUnlocked = kmSustained >= requirement;
+      case 'mobility':
+        isUnlocked = (userStats['km'] ?? 0) >= req;
         break;
-
-      case 'consistency': 
-        isUnlocked = currentStreak >= requirement;
+      case 'consistency':
+        if (streakTitles.contains(title.trim())) {
+          // Medalhas de dias consecutivos
+          isUnlocked = currentStreak >= req;
+        } else {
+          // Medalhas de missões completas (Semente Verde, Amigo do Planeta, etc.)
+          isUnlocked = completedMissionsCount >= req;
+        }
         break;
-
       default:
-        isUnlocked = completedMissionsCount >= requirement;
+        isUnlocked = completedMissionsCount >= req;
         break;
     }
-  }
-
-  /// Expressão regular aprimorada para capturar números colados em letras (ex: "100km")
-  int _extractRequirement(String text) {
-    final RegExp regex = RegExp(r'\d+'); 
-    final match = regex.firstMatch(text.replaceAll('.', '')); 
-    if (match != null) {
-      return int.tryParse(match.group(0) ?? '0') ?? 0;
-    }
-    return 1; 
   }
 }
