@@ -128,7 +128,6 @@ class DetailChallengeBox extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
 
-                    // ---------- SEÇÃO SAIBA MAIS ----------
                     if (challenge.info != null && challenge.info!.isNotEmpty) ...[
                       const Text(
                         "Saiba mais",
