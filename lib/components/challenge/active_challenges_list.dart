@@ -3,13 +3,13 @@ import 'package:naturats/controller/home_controller.dart';
 import 'package:provider/provider.dart';
 import '../../model/challenge.dart';
 import 'active_challenge_box.dart';
+import 'package:naturats/view/challenge_active_detail_page.dart';
 
 class ActiveChallengesListWidget extends StatefulWidget {
   final Function(Challenge) onTap;
   final List<Challenge> challenges;
   final bool loading;
   //final ProfileController profileController;
-  
 
   const ActiveChallengesListWidget({
     super.key,
@@ -26,7 +26,6 @@ class ActiveChallengesListWidget extends StatefulWidget {
 
 class _ActiveChallengesListWidgetState
     extends State<ActiveChallengesListWidget> {
-
   // progresso mockado
   final Map<String, int> progresses = {};
 
@@ -42,21 +41,14 @@ class _ActiveChallengesListWidgetState
 
   void registerProgress(String challengeId) {
     setState(() {
-      progresses[challengeId] =
-          (progresses[challengeId] ?? 0) + 1;
+      progresses[challengeId] = (progresses[challengeId] ?? 0) + 1;
     });
   }
-
-  
 
   @override
   Widget build(BuildContext context) {
     if (widget.loading) {
-      return const Expanded(
-        child: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Expanded(child: Center(child: CircularProgressIndicator()));
     }
 
     if (widget.challenges.isEmpty) {
@@ -64,10 +56,7 @@ class _ActiveChallengesListWidgetState
         child: Center(
           child: Text(
             "Nenhum desafio ativo",
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
         ),
       );
@@ -75,44 +64,51 @@ class _ActiveChallengesListWidgetState
 
     return Expanded(
       child: ListView.separated(
-        padding: const EdgeInsets.only(
-          top: 12,
-          bottom: 24,
-        ),
+        padding: const EdgeInsets.only(top: 12, bottom: 24),
 
         itemCount: widget.challenges.length,
 
-        separatorBuilder: (_, __) =>
-            const SizedBox(height: 2),
+        separatorBuilder: (_, __) => const SizedBox(height: 2),
 
         itemBuilder: (context, index) {
-          final challenge =
-              widget.challenges[index];
+          final challenge = widget.challenges[index];
 
-          final currentProgress =
-              progresses[challenge.id] ?? 0;
+          final currentProgress = progresses[challenge.id] ?? 0;
 
           final int goal = challenge.goal;
 
           return ActiveChallengeBox(
-
             challenge: challenge,
 
             currentProgress: currentProgress,
 
             goal: goal,
 
-            onTap: () =>
-                widget.onTap(challenge),
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ActiveChallengeDetailPage(
+                    challenge: challenge,
+                    currentProgress: currentProgress,
+                    goal: goal,
+                    onRegister: () => registerProgress(challenge.id),
+                    onFinish: () async {
+                      await context.read<HomeController>().completeChallenge(
+                        challenge,
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
 
+            //widget.onTap(challenge),
             onRegister: () {
               registerProgress(challenge.id);
             },
 
             onFinish: () async {
-              await context
-                  .read<HomeController>()
-                  .completeChallenge(challenge);
+              await context.read<HomeController>().completeChallenge(challenge);
             },
           );
         },

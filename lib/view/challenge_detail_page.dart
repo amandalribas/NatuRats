@@ -12,10 +12,7 @@ import '../controller/challenges_controller.dart';
 class DetailChallengeBox extends StatelessWidget {
   final Challenge challenge;
 
-  const DetailChallengeBox({
-    super.key,
-    required this.challenge,
-  });
+  const DetailChallengeBox({super.key, required this.challenge});
 
   Future<void> _launchUrl(String url) async {
     final uri = Uri.tryParse(url);
@@ -123,12 +120,11 @@ class DetailChallengeBox extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    ChallengeImpact(
-                      map: challenge.statistics,
-                    ),
+                    ChallengeImpact(map: challenge.statistics),
                     const SizedBox(height: 20),
 
-                    if (challenge.info != null && challenge.info!.isNotEmpty) ...[
+                    if (challenge.info != null &&
+                        challenge.info!.isNotEmpty) ...[
                       const Text(
                         "Saiba mais",
                         style: TextStyle(
@@ -166,7 +162,41 @@ class DetailChallengeBox extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
+                      // Pontos
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.branco,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber.shade600,
+                              size: 28,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              "${challenge.duration.points} pontos ao concluir",
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 32),
                     ],
                   ],
                 ),
@@ -207,8 +237,7 @@ class DetailChallengeBox extends StatelessWidget {
                   ),
                   child: const Text(
                     "Iniciar desafio",
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
