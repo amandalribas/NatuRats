@@ -112,6 +112,8 @@ class UserRepository extends ChangeNotifier {
     debugPrint("chamada");
     if (_currentUser == null) return;
 
+    await updateStreakOnCheckIn();
+
     _currentUser!.numPoints += challenge.duration.points;
     final limit = 50 * _currentUser!.level;
 
@@ -121,8 +123,6 @@ class UserRepository extends ChangeNotifier {
     }
 
     _currentUser!.numMissions += 1;
-
-    // TODO: streak
 
     challenge.statistics.forEach((key, value) {
       if (value != null) {
@@ -180,6 +180,40 @@ class UserRepository extends ChangeNotifier {
     }
   }
 
+  Future<void> updateStreakOnCheckIn() async {
+    if (_currentUser == null) return;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    final lastCheckIn = _currentUser!.lastCheckInDate;
+    if (lastCheckIn == null) {
+      // Primeiro check-in da vida
+      _currentUser!.streak = 1;
+      _currentUser!.lastCheckInDate = today;
+    } else {
+      final lastDay = DateTime(lastCheckIn.year, lastCheckIn.month, lastCheckIn.day);
+      final difference = today.difference(lastDay).inDays;
+
+      if (difference == 0) {
+        // Já fez check-in hoje → não altera nada
+        return;
+      } else if (difference == 1) {
+        // Dia consecutivo → aumenta a sequência
+        _currentUser!.streak += 1;
+        _currentUser!.lastCheckInDate = today;
+      } else {
+        // Ficou 2+ dias sem check-in → reseta a sequência
+        _currentUser!.streak = 1;
+        _currentUser!.lastCheckInDate = today;
+      }
+    }
+
+    await _userService.update(_currentUser!);
+    notifyListeners();
+  }
+
+
   int getNumPoints() {
     return _currentUser?.numPoints ?? 0;
   }
@@ -197,7 +231,17 @@ class UserRepository extends ChangeNotifier {
   }
 
   int getStreak() {
-    return _currentUser?.streak ?? 0;
+    final user = _currentUser;
+    if (user == null) return 0;
+
+    final last = user.lastCheckInDate;
+    if (last == null) return 0;
+
+    final today = DateTime.now();
+    final lastDay = DateTime(last.year, last.month, last.day);
+    final currentDay = DateTime(today.year, today.month, today.day);
+
+    return currentDay.difference(lastDay).inDays > 1 ? 0 : user.streak;
   }
 
   Map<String, int> getStatistics() {

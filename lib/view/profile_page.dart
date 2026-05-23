@@ -3,6 +3,7 @@ import 'package:naturats/components/profile/top_stat_card.dart';
 import 'package:naturats/components/profile/view_selector.dart';
 import 'package:naturats/controller/profile_controller.dart';
 import 'package:naturats/theme/app_colors.dart';
+import 'package:naturats/view/config_page.dart';
 import 'package:provider/provider.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -61,13 +62,16 @@ class _ProfileViewState extends State<_ProfileView> {
                           const Spacer(),
                           IconButton(
                             onPressed: () {
-                                // TODO
-                            }, 
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const ConfigPage()),
+                              );
+                            },
                             icon: const Icon(
                               Icons.settings,
                               color: AppColors.branco,
                               size: 25,
-                            )
+                            ),
                           ),
                         ],
                       ),

@@ -12,6 +12,7 @@ class User {
   int numMissions;
   int streak;
   Map<String, int>? statistics;
+  DateTime? lastCheckInDate;
 
   User({
     required this.id,
@@ -25,6 +26,7 @@ class User {
     required this.numMissions,
     required this.streak,
     required this.statistics,
+    this.lastCheckInDate,
   });
 
   Map<String, dynamic> toMap() {
@@ -39,6 +41,7 @@ class User {
       "num_missions": numMissions,
       "streak": streak,
       "statistics": statistics,
+      "last_check_in_date": lastCheckInDate, 
     };
   }
 
@@ -68,6 +71,7 @@ class User {
       statistics: Map<String, int>.from(
         map["statistics"] ?? {"CO2": 0, "water": 0, "recycled": 0, "km": 0},
       ),
+      lastCheckInDate: (map["last_check_in_date"] as Timestamp?)?.toDate(),
     );
   }
 }

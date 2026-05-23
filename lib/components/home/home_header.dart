@@ -39,21 +39,7 @@ class HomePageHeader extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              IconButton(
-                  onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const CreditsPage(),
-                        ),
-                      );
-                    },
-                  icon: const Icon(
-                    Icons.info_outline,
-                    color: AppColors.branco,
-                    size: 25,
-                  )
-              )
+              
             ],
           ),
           const SizedBox(height: 10),
