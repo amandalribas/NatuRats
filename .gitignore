@@ -48,3 +48,6 @@ app.*.map.json
 
 # Segurança
 google-services.json
+
+# Firebase Functions
+functions/node_modules/

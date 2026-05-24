@@ -1,0 +1,12 @@
+{
+  "name": "naturats-functions",
+  "description": "Cloud Functions for NatuRats",
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.7.0",
+    "firebase-functions": "^4.6.0"
+  }
+}

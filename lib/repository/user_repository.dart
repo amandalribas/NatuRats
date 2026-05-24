@@ -5,6 +5,7 @@ import 'package:naturats/model/medal.dart';
 import 'package:naturats/service/auth_service.dart';
 import 'package:naturats/service/challenges_service.dart';
 import 'package:naturats/service/medal_service.dart';
+import 'package:naturats/service/notification_service.dart';
 import 'package:naturats/service/user_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/user.dart';
@@ -13,6 +14,7 @@ class UserRepository extends ChangeNotifier {
   final AuthenticationService _authService = AuthenticationService();
   final UserService _userService = UserService();
   final ChallengesService _challengesService = ChallengesService();
+  final NotificationService _notificationService = NotificationService();
 
   User? _currentUser;
   bool isSignedIn = false;
@@ -43,6 +45,10 @@ class UserRepository extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    if (_currentUser != null) {
+      await _notificationService.unregisterDeviceToken(_currentUser!.id);
+      _notificationService.stopTokenRefreshListener();
+    }
     await _authService.signOut();
     _currentUser = null;
     isSignedIn = false;
@@ -63,6 +69,11 @@ class UserRepository extends ChangeNotifier {
       );
     } else {
       _currentUser = user;
+    }
+
+    if (_currentUser != null) {
+      await _notificationService.registerDeviceToken(_currentUser!.id);
+      _notificationService.startTokenRefreshListener(_currentUser!.id);
     }
   }
 
@@ -266,5 +277,11 @@ class UserRepository extends ChangeNotifier {
         .toList();
 
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _notificationService.stopTokenRefreshListener();
+    super.dispose();
   }
 }

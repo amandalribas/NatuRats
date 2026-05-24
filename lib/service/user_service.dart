@@ -46,5 +46,33 @@ class UserService {
       rethrow;
     }
   }
-   
+
+  Future<void> addFcmToken(String userId, String token) async {
+    try {
+      await _firestore
+          .collection(collection)
+          .doc(userId)
+          .set({
+        'fcm_tokens': FieldValue.arrayUnion([token]),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint("Error updating FCM token: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> removeFcmToken(String userId, String token) async {
+    try {
+      await _firestore
+          .collection(collection)
+          .doc(userId)
+          .set({
+        'fcm_tokens': FieldValue.arrayRemove([token]),
+      }, SetOptions(merge: true));
+    } catch (e) {
+      debugPrint("Error removing FCM token: $e");
+      rethrow;
+    }
+  }
+  
 }
