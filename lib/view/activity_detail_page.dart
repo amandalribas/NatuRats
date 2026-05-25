@@ -116,7 +116,7 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
       appBar: AppBar(title: Text(widget.activity.title)),
       body: Column(
         children: [
-          // Conteúdo rolável (detalhes + chat)
+ 
           Expanded(
             child: SingleChildScrollView(
               controller: _scrollController,
@@ -124,7 +124,7 @@ class _ActivityDetailPageState extends State<ActivityDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Detalhes da atividade
+ 
                   if (widget.activity.photoBase64 != null &&
                       widget.activity.photoBase64!.isNotEmpty)
                     ClipRRect(
