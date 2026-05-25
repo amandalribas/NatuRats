@@ -93,7 +93,7 @@ class ChallengesService {
 
   Future<List<CompletedChallenges>> getUserCompletedChallenges(String userId) async {
     try {
-      // Recupera todos os desafios concluídos do usuário.
+
       QuerySnapshot completedChallengesSnapshot = await _firestore
           .collection("users")
           .doc(userId)

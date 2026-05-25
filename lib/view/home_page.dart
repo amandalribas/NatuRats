@@ -25,7 +25,7 @@ class _HomeView extends StatelessWidget {
     return Consumer<HomeController>(
       builder: (context, controller, child) {
         return Scaffold(
-          backgroundColor: AppColors.bgCinza,
+          backgroundColor: AppColors.branco,
           body: Column(
             children: [
               HomePageHeader(

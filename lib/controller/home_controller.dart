@@ -1,8 +1,9 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:naturats/model/challenge.dart';
 import 'package:naturats/repository/challenges_repository.dart';
 import 'package:naturats/repository/user_repository.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeController extends ChangeNotifier {
   final BuildContext _context;
@@ -12,10 +13,13 @@ class HomeController extends ChangeNotifier {
   bool loading = true;
   List<Challenge> activeChallenges = [];
   String? firstName;
+
+  final Map<String, int> _progressCache = {};
+  static const String _progressKeyPrefix = 'challenge_progress_';
+
   int get level => _userRepository.getLevel();
   int get numPoints => _userRepository.getNumPoints();
   int get streak => _userRepository.getStreak();
-
 
   HomeController(this._context) {
     _initialize();
@@ -25,11 +29,17 @@ class HomeController extends ChangeNotifier {
     _userRepository = _context.read<UserRepository>();
     _challengesRepository = _context.read<ChallengesRepository>();
 
-    _getFirstName();
- 
+    _userRepository.addListener(_onUserRepositoryChanged);
 
+    _getFirstName();
     await _getActiveChallenges();
+    await _loadAllProgresses();
+
     loading = false;
+    notifyListeners();
+  }
+
+  void _onUserRepositoryChanged() {
     notifyListeners();
   }
 
@@ -39,26 +49,63 @@ class HomeController extends ChangeNotifier {
 
   Future<void> _getActiveChallenges() async {
     String? userId = _userRepository.getCurrentUserId();
-    activeChallenges = await _challengesRepository
-        .getActiveChallenges(userId!);
+    activeChallenges = await _challengesRepository.getActiveChallenges(userId!);
+  }
+
+  Future<int> loadProgress(String challengeId) async {
+    if (_progressCache.containsKey(challengeId)) {
+      return _progressCache[challengeId]!;
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getInt(_progressKeyPrefix + challengeId) ?? 0;
+    _progressCache[challengeId] = saved;
+    return saved;
+  }
+
+  Future<void> saveProgress(String challengeId, int progress) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_progressKeyPrefix + challengeId, progress);
+    _progressCache[challengeId] = progress;
+    notifyListeners();
+  }
+
+  Future<void> incrementProgress(Challenge challenge) async {
+    int current = await loadProgress(challenge.id);
+    if (current >= challenge.goal) return;
+    int newProgress = current + 1;
+    await saveProgress(challenge.id, newProgress);
+    // Isso atualiza a streak e notifica o UserRepository
+    await _userRepository.updateStreakOnCheckIn();
+  }
+
+  int getProgress(String challengeId) {
+    return _progressCache[challengeId] ?? 0;
+  }
+
+  Future<void> _loadAllProgresses() async {
+    for (var challenge in activeChallenges) {
+      await loadProgress(challenge.id);
+    }
   }
 
   Future<void> completeChallenge(Challenge challenge) async {
     final userId = _userRepository.getCurrentUserId()!;
 
     await _userRepository.completeChallenge(challenge);
-
-    await _challengesRepository.finishChallenge(
-      userId,
-      challenge.id,
-    );
-
+    await _challengesRepository.finishChallenge(userId, challenge.id);
     await _userRepository.getCompletedChallenges();
 
-    activeChallenges.removeWhere(
-      (c) => c.id == challenge.id,
-    );
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_progressKeyPrefix + challenge.id);
+    _progressCache.remove(challenge.id);
 
+    activeChallenges.removeWhere((c) => c.id == challenge.id);
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _userRepository.removeListener(_onUserRepositoryChanged);
+    super.dispose();
   }
 }

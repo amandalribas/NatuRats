@@ -4,19 +4,18 @@ import 'package:provider/provider.dart';
 import '../../model/challenge.dart';
 import 'active_challenge_box.dart';
 import 'package:naturats/view/challenge_active_detail_page.dart';
+import 'package:naturats/view/finish_challenge_dialog.dart';
 
 class ActiveChallengesListWidget extends StatefulWidget {
   final Function(Challenge) onTap;
   final List<Challenge> challenges;
   final bool loading;
-  //final ProfileController profileController;
 
   const ActiveChallengesListWidget({
     super.key,
     required this.onTap,
     required this.challenges,
     required this.loading,
-    //required this.profileController,
   });
 
   @override
@@ -26,27 +25,11 @@ class ActiveChallengesListWidget extends StatefulWidget {
 
 class _ActiveChallengesListWidgetState
     extends State<ActiveChallengesListWidget> {
-  // progresso mockado
-  final Map<String, int> progresses = {};
-
-  @override
-  void initState() {
-    super.initState();
-
-    // inicia todos com 0
-    for (final challenge in widget.challenges) {
-      progresses[challenge.id] = 0;
-    }
-  }
-
-  void registerProgress(String challengeId) {
-    setState(() {
-      progresses[challengeId] = (progresses[challengeId] ?? 0) + 1;
-    });
-  }
-
+  
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<HomeController>();
+
     if (widget.loading) {
       return const Expanded(child: Center(child: CircularProgressIndicator()));
     }
@@ -65,25 +48,17 @@ class _ActiveChallengesListWidgetState
     return Expanded(
       child: ListView.separated(
         padding: const EdgeInsets.only(top: 12, bottom: 24),
-
         itemCount: widget.challenges.length,
-
         separatorBuilder: (_, __) => const SizedBox(height: 2),
-
         itemBuilder: (context, index) {
           final challenge = widget.challenges[index];
-
-          final currentProgress = progresses[challenge.id] ?? 0;
-
-          final int goal = challenge.goal;
+          final currentProgress = controller.getProgress(challenge.id);
+          final goal = challenge.goal;
 
           return ActiveChallengeBox(
             challenge: challenge,
-
             currentProgress: currentProgress,
-
             goal: goal,
-
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -91,24 +66,33 @@ class _ActiveChallengesListWidgetState
                     challenge: challenge,
                     currentProgress: currentProgress,
                     goal: goal,
-                    onRegister: () => registerProgress(challenge.id),
+                    onRegister: () => controller.incrementProgress(challenge),
                     onFinish: () async {
-                      await context.read<HomeController>().completeChallenge(
-                        challenge,
+                      await controller.completeChallenge(challenge);
+                      await showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (_) => FinishChallengeDialog(
+                          challenge: challenge,
+                          points: challenge.duration.points,
+                        ),
                       );
                     },
                   ),
                 ),
               );
             },
-
-            //widget.onTap(challenge),
-            onRegister: () {
-              registerProgress(challenge.id);
-            },
-
+            onRegister: () => controller.incrementProgress(challenge),
             onFinish: () async {
-              await context.read<HomeController>().completeChallenge(challenge);
+              await controller.completeChallenge(challenge);
+              await showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => FinishChallengeDialog(
+                  challenge: challenge,
+                  points: challenge.duration.points,
+                ),
+              );
             },
           );
         },

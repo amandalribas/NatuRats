@@ -32,12 +32,11 @@ class ProfileController extends ChangeNotifier {
     return _userRepository.getNumPoints();
   }
 
-  // TODO
   int getSequence() {
     return _userRepository.getStreak();
   }
 
-  // TODO
+
   int getTotalChallenges() {
     return _userRepository.getNumMissions();
   }

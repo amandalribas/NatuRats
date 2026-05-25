@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/category_tag.dart';
 import 'package:naturats/model/challenge.dart';
+import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/finish_challenge_dialog.dart';
 
-class ActiveChallengeBox extends StatelessWidget {
+class ActiveChallengeBox extends StatefulWidget {
   final Challenge challenge;
 
   final int currentProgress;
@@ -11,7 +12,7 @@ class ActiveChallengeBox extends StatelessWidget {
 
   final VoidCallback onTap;
   final VoidCallback onRegister;
-  final VoidCallback onFinish;
+  final Future<void> Function() onFinish;
 
   const ActiveChallengeBox({
     super.key,
@@ -20,18 +21,23 @@ class ActiveChallengeBox extends StatelessWidget {
     required this.goal,
     required this.onTap,
     required this.onRegister,
-    required this.onFinish, 
-    });
+    required this.onFinish,
+  });
 
-  double get progress => currentProgress / goal;
+  @override
+  State<ActiveChallengeBox> createState() => _ActiveChallengeBoxState();
+}
 
-  bool get canFinish => currentProgress >= goal - 1;
+class _ActiveChallengeBoxState extends State<ActiveChallengeBox> {
+  bool _clicked = false;
+
+  double get progress => widget.currentProgress / widget.goal;
+
+  bool get canFinish => widget.currentProgress >= widget.goal - 1;
 
   String get progressText =>
-      "$currentProgress/$goal concluído";
+      "${widget.currentProgress}/${widget.goal} concluído";
 
-
-  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -39,8 +45,14 @@ class ActiveChallengeBox extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 14),
 
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.branco,
+
         borderRadius: BorderRadius.circular(22),
+
+        border: Border.all(
+          color: AppColors.bgCinza,
+          width: 1.2,
+        ),
 
         boxShadow: [
           BoxShadow(
@@ -56,14 +68,13 @@ class ActiveChallengeBox extends StatelessWidget {
 
         child: InkWell(
           borderRadius: BorderRadius.circular(22),
-          onTap: onTap,
+          onTap: widget.onTap,
 
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 6, 16),
 
             child: Row(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
 
               children: [
                 Container(
@@ -71,13 +82,12 @@ class ActiveChallengeBox extends StatelessWidget {
                   width: 54,
 
                   decoration: BoxDecoration(
-                    color: challenge.type.color,
-                    borderRadius:
-                        BorderRadius.circular(18),
+                    color: widget.challenge.type.color,
+                    borderRadius: BorderRadius.circular(18),
                   ),
 
                   child: Icon(
-                    challenge.type.icon,
+                    widget.challenge.type.icon,
                     size: 28,
                     color: Colors.black,
                   ),
@@ -87,12 +97,11 @@ class ActiveChallengeBox extends StatelessWidget {
 
                 Expanded(
                   child: Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
 
                     children: [
                       Text(
-                        challenge.title,
+                        widget.challenge.title,
 
                         style: const TextStyle(
                           fontSize: 16,
@@ -104,7 +113,7 @@ class ActiveChallengeBox extends StatelessWidget {
                       const SizedBox(height: 4),
 
                       Text(
-                        challenge.description,
+                        widget.challenge.description,
 
                         style: TextStyle(
                           fontSize: 12,
@@ -113,8 +122,7 @@ class ActiveChallengeBox extends StatelessWidget {
                         ),
 
                         maxLines: 2,
-                        overflow:
-                            TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
                       ),
 
                       const SizedBox(height: 10),
@@ -124,9 +132,8 @@ class ActiveChallengeBox extends StatelessWidget {
 
                         style: TextStyle(
                           fontSize: 11,
-                          fontWeight:
-                              FontWeight.w600,
-                          color: challenge.type.color,
+                          fontWeight: FontWeight.w600,
+                          color: widget.challenge.type.color,
                         ),
                       ),
 
@@ -136,25 +143,17 @@ class ActiveChallengeBox extends StatelessWidget {
                         children: [
                           Expanded(
                             child: ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(
-                                      10),
+                              borderRadius: BorderRadius.circular(10),
 
-                              child:
-                                  LinearProgressIndicator(
-                                value: progress > 1
-                                    ? 1
-                                    : progress,
+                              child: LinearProgressIndicator(
+                                value: progress > 1 ? 1 : progress,
 
                                 minHeight: 7,
 
-                                backgroundColor:
-                                    Colors.grey.shade200,
+                                backgroundColor: Colors.grey.shade200,
 
-                                valueColor:
-                                    AlwaysStoppedAnimation<
-                                        Color>(
-                                  challenge.type.color,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  widget.challenge.type.color,
                                 ),
                               ),
                             ),
@@ -167,8 +166,7 @@ class ActiveChallengeBox extends StatelessWidget {
 
                             style: const TextStyle(
                               fontSize: 12,
-                              fontWeight:
-                                  FontWeight.w600,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ],
@@ -178,16 +176,13 @@ class ActiveChallengeBox extends StatelessWidget {
 
                       Row(
                         mainAxisSize: MainAxisSize.min,
+
                         children: [
-                          CategoryTag(
-                            category: challenge.duration,
-                          ),
+                          CategoryTag(category: widget.challenge.duration),
 
                           const SizedBox(width: 6),
 
-                          CategoryTag(
-                            category: challenge.type,
-                          ),
+                          CategoryTag(category: widget.challenge.type),
                         ],
                       ),
                     ],
@@ -196,8 +191,6 @@ class ActiveChallengeBox extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // BOTAO MENOR
-
                 SizedBox(
                   width: 58,
 
@@ -205,19 +198,28 @@ class ActiveChallengeBox extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: () async {
-                          if (canFinish) {
-                            onFinish();
-                            await showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (_) =>
-                                  FinishChallengeDialog(
-                                    challenge: challenge,
-                                    points: challenge.duration.points,
-                                  ),
-                            );
-                          } else {
-                            onRegister();
+                          if (_clicked) return;
+
+                          _clicked = true;
+
+                          try {
+                            if (canFinish) {
+                              await showDialog(
+                                context: context,
+                                barrierDismissible: false,
+
+                                builder: (_) => FinishChallengeDialog(
+                                  challenge: widget.challenge,
+                                  points: widget.challenge.duration.points,
+                                ),
+                              );
+
+                              await widget.onFinish();
+                            } else {
+                              widget.onRegister();
+                            }
+                          } finally {
+                            _clicked = false;
                           }
                         },
 
@@ -228,19 +230,15 @@ class ActiveChallengeBox extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: canFinish
                                 ? Colors.green.shade100
-                                : const Color(
-                                    0xFFF1F7F1),
+                                : const Color(0xFFF1F7F1),
 
                             shape: BoxShape.circle,
                           ),
 
                           child: Icon(
-                            canFinish
-                                ? Icons.check
-                                : Icons.add,
+                            canFinish ? Icons.check : Icons.add,
 
-                            color:
-                                Colors.green.shade700,
+                            color: Colors.green.shade700,
 
                             size: 24,
                           ),
@@ -250,18 +248,14 @@ class ActiveChallengeBox extends StatelessWidget {
                       const SizedBox(height: 4),
 
                       Text(
-                        canFinish
-                            ? "Finalizar"
-                            : "Registrar",
+                        canFinish ? "Finalizar" : "Registrar",
 
                         textAlign: TextAlign.center,
 
                         style: TextStyle(
                           fontSize: 10,
-                          fontWeight:
-                              FontWeight.w600,
-                          color:
-                              Colors.green.shade700,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade700,
                         ),
                       ),
                     ],
@@ -275,5 +269,3 @@ class ActiveChallengeBox extends StatelessWidget {
     );
   }
 }
-
-

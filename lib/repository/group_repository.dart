@@ -182,4 +182,27 @@ class GroupRepository {
     final info = infoSnapshot.data() ?? {};
     return info['title'] ?? '';
   }
+
+  Future<Set<String>> getUserGroupIds(String userEmail) async {
+  final firestore = FirebaseFirestore.instance;
+  final groupsSnapshot = await firestore
+      .collection('groups')
+      .get();
+
+  final Set<String> userGroupIds = {};
+
+  for (var groupDoc in groupsSnapshot.docs) {
+    final memberDoc = await groupDoc.reference
+        .collection('members')
+        .doc('members')
+        .get();
+    if (memberDoc.exists) {
+      final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+      if (emails.contains(userEmail)) {
+        userGroupIds.add(groupDoc.id);
+      }
+    }
+  }
+  return userGroupIds;
+}
 }

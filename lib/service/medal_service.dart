@@ -1,8 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../model/medal.dart'; // Ajuste o caminho conforme a sua estrutura de pastas
+import '../model/medal.dart'; 
 
 class MedalService {
-  // Instância do Firebase Firestore
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final String _collectionName = 'medals';

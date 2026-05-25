@@ -35,7 +35,7 @@ class _ProfileViewState extends State<_ProfileView> {
     return Consumer<ProfileController>(
         builder: (context, controller, child) {
           return Scaffold(
-            backgroundColor: const Color(0xFFF4F6F9),
+            backgroundColor: AppColors.branco,
             body: Column(
               children: [
                 Container(

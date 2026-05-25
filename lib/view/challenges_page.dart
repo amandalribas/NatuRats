@@ -26,7 +26,7 @@ class _ChallengesView extends StatelessWidget {
     return Consumer<ChallengesController>(
       builder: (context, controller, child) {
         return Scaffold(
-          backgroundColor: AppColors.bgCinza,
+          backgroundColor: AppColors.branco,
           body: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

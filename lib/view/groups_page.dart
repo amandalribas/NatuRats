@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:naturats/components/group/group_header.dart';
-import 'package:naturats/components/group/group_search_bar.dart';
-import 'package:naturats/components/group/group_options_sheet.dart';
 import 'package:naturats/components/group/group_card.dart';
+import 'package:naturats/components/group/group_header.dart';
+import 'package:naturats/components/group/group_options_sheet.dart';
+import 'package:naturats/components/group/group_search_bar.dart';
 import 'package:naturats/controller/group_controller.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/group_form_page.dart';
@@ -27,14 +27,14 @@ class _GroupPageState extends State<GroupPage> {
     final action = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
       ),
       builder: (_) => const GroupOptionsSheet(),
     );
 
-    if (!context.mounted || action != 'create_group') {
-      return;
-    }
+    if (!context.mounted || action != 'create_group') return;
 
     final created = await Navigator.push<bool>(
       context,
@@ -53,48 +53,149 @@ class _GroupPageState extends State<GroupPage> {
     return Scaffold(
       backgroundColor: AppColors.branco,
 
-      // ➕ BOTÃO FLUTUANTE
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showOptions(context),
         backgroundColor: AppColors.bgVerde,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
-        child: const Icon(Icons.add, color: Colors.white),
+        child: const Icon(
+          Icons.add,
+          color: AppColors.bgCinza,
+        ),
       ),
 
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const GroupHeader(),
+      body: Column(
+        children: [
+          const GroupHeader(),
 
-            // LISTA DE GRUPOS
-            ListenableBuilder(
-              listenable: _groupController,
+          const SizedBox(height: 15),
+
+          GroupSearchBar(
+            onChanged: _groupController.updateSearch,
+          ),
+
+          const SizedBox(height: 12),
+
+          AnimatedBuilder(
+            animation: _groupController,
+            builder: (context, _) {
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          _groupController.setTab('my_groups');
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color:
+                                _groupController.selectedTab == 'my_groups'
+                                    ? AppColors.buttomVerde
+                                    : AppColors.bgCinza,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Meus grupos',
+                              style: TextStyle(
+                                color:
+                                    _groupController.selectedTab ==
+                                            'my_groups'
+                                        ? AppColors.branco
+                                        : AppColors.textCinza,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: 12),
+
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          _groupController.setTab('general');
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color:
+                                _groupController.selectedTab == 'general'
+                                    ? AppColors.buttomVerde
+                                    : AppColors.bgCinza,
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Geral',
+                              style: TextStyle(
+                                color:
+                                    _groupController.selectedTab ==
+                                            'general'
+                                        ? AppColors.branco
+                                        : AppColors.textCinza,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          Expanded(
+            child: AnimatedBuilder(
+              animation: _groupController,
               builder: (context, _) {
                 if (_groupController.isLoading) {
-                  return const Column(children: [
-                    SizedBox(height: 30),
-                    Center(child: CircularProgressIndicator())
-                  ]);
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
                 }
 
-                return Column(
-                  children: [
-                    const SizedBox(height: 15),
-                    GroupSearchBar(onChanged: _groupController.updateSearch),
-                    const SizedBox(height: 20),
-                    ..._groupController.groups
-                        .map((group) => GroupCard(group: group))
-                  ]
-                );
-              }
-            ),
+                final groups = _groupController.groups;
 
-            const SizedBox(height: 80),
-          ],
-        ),
+                if (groups.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      "Nenhum grupo encontrado",
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                  ),
+                  itemCount: groups.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    return GroupCard(
+                      group: groups[index],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

@@ -120,7 +120,6 @@ class UserRepository extends ChangeNotifier {
   }
 
   Future<void> completeChallenge(Challenge challenge) async {
-    debugPrint("chamada");
     if (_currentUser == null) return;
 
     await updateStreakOnCheckIn();
@@ -199,7 +198,7 @@ class UserRepository extends ChangeNotifier {
 
     final lastCheckIn = _currentUser!.lastCheckInDate;
     if (lastCheckIn == null) {
-      // Primeiro check-in da vida
+
       _currentUser!.streak = 1;
       _currentUser!.lastCheckInDate = today;
     } else {
@@ -207,14 +206,11 @@ class UserRepository extends ChangeNotifier {
       final difference = today.difference(lastDay).inDays;
 
       if (difference == 0) {
-        // Já fez check-in hoje → não altera nada
         return;
       } else if (difference == 1) {
-        // Dia consecutivo → aumenta a sequência
         _currentUser!.streak += 1;
         _currentUser!.lastCheckInDate = today;
       } else {
-        // Ficou 2+ dias sem check-in → reseta a sequência
         _currentUser!.streak = 1;
         _currentUser!.lastCheckInDate = today;
       }
