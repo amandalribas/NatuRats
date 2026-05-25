@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/model/group_activity.dart';
 import 'package:naturats/view/activity_detail_page.dart';
+import 'package:naturats/view/report_post_page.dart';
 
 Uint8List _decodeBase64Isolate(String data) {
   final comma = data.indexOf(',');
@@ -88,13 +89,43 @@ class _GroupFeedViewState extends State<GroupFeedView> {
     }
   }
 
+  void _showReportBottomSheet(GroupActivity activity) {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.flag_outlined, color: Colors.red),
+                title: const Text('Denunciar post'),
+                onTap: () {
+                  Navigator.pop(ctx); 
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReportPostPage(
+                        groupId: widget.groupId,
+                        activity: activity,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<GroupActivity>>(
       stream: _activitiesStream(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          // Show a local loading indicator only for the feed area
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
@@ -171,6 +202,15 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                                 activity.createdAt != null ? _formatTime(activity.createdAt!) : '',
                                 style: const TextStyle(fontSize: 12, color: Colors.grey),
                               ),
+
+                              if (!isMe)
+                                IconButton(
+                                  icon: const Icon(Icons.more_vert, size: 20),
+                                  onPressed: () => _showReportBottomSheet(activity),
+                                  padding: EdgeInsets.zero,
+                                  constraints: const BoxConstraints(), 
+                                  tooltip: 'Opções',
+                                ),
                             ],
                           ),
                           const SizedBox(height: 12),

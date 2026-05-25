@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/category_tag.dart';
 import 'package:naturats/model/challenge.dart';
 import 'package:naturats/theme/app_colors.dart';
-import 'package:naturats/view/finish_challenge_dialog.dart';
 
 class ActiveChallengeBox extends StatefulWidget {
   final Challenge challenge;
@@ -204,17 +203,7 @@ class _ActiveChallengeBoxState extends State<ActiveChallengeBox> {
 
                           try {
                             if (canFinish) {
-                              await showDialog(
-                                context: context,
-                                barrierDismissible: false,
-
-                                builder: (_) => FinishChallengeDialog(
-                                  challenge: widget.challenge,
-                                  points: widget.challenge.duration.points,
-                                ),
-                              );
-
-                              await widget.onFinish();
+                              await widget.onFinish(); 
                             } else {
                               widget.onRegister();
                             }

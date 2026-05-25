@@ -32,8 +32,8 @@ class GroupRepository {
         id: doc.id,
         name: info['title'] ?? '',
         description: info['description'] ?? '',
-        totalPeople: 0, // TODO
-        totalPoints: 0, // TODO
+        totalPeople: 0,
+        totalPoints: 0, 
         image: info['banner'] ?? '',
       );
     }));
@@ -103,13 +103,14 @@ class GroupRepository {
       final memberDoc = await doc.reference.collection('members').doc('members').get();
       final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
       final groupLength = emails.length;
+      final totalPoints = await calculateGroupPoints(emails);
       
       visibleGroups.add(GroupModel(
         id: doc.id,
         name: info['title'] ?? '',
         description: info['description'] ?? '',
         totalPeople: groupLength,
-        totalPoints: 0, // TODO
+        totalPoints: totalPoints,
         image: info['banner'] ?? '',
       ));
     }
@@ -122,18 +123,46 @@ class GroupRepository {
       final memberDoc = await doc.reference.collection('members').doc('members').get();
       final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
       final groupLength = emails.length;
+      final totalPoints = await calculateGroupPoints(emails);
 
       visibleGroups.add(GroupModel(
         id: doc.id,
         name: info['title'] ?? '',
         description: info['description'] ?? '',
         totalPeople: groupLength,
-        totalPoints: 0, // TODO
+        totalPoints: totalPoints,
         image: info['banner'] ?? '',
       ));
     }
 
     return visibleGroups;
+  }
+
+  Future<int> calculateGroupPoints(List<dynamic> emails) async {
+    final firestore = FirebaseFirestore.instance;
+
+    int totalPoints = 0;
+
+    for (final email in emails) {
+      final userSnapshot = await firestore
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+
+      if (userSnapshot.docs.isNotEmpty) {
+        final userData = userSnapshot.docs.first.data();
+
+        final currentPoints = (userData['num_points'] ?? 0) as int;
+        final level = (userData['level'] ?? 1) as int;
+
+        final userTotalPoints = currentPoints + (level * (level - 1) * 25);
+
+        totalPoints += userTotalPoints;
+      }
+    }
+
+    return totalPoints;
   }
 
   Future<List<GroupModel>> fetchUserGroups(String userId) async {
