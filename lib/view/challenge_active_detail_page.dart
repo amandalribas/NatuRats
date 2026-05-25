@@ -139,47 +139,7 @@ class ActiveChallengeDetailPage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Dicas / info
-                  if (challenge.info != null && challenge.info!.isNotEmpty) ...[
-                    const Text(
-                      "Saiba mais",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.preto,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...challenge.info!.map(
-                      (link) => Padding(
-                        padding: const EdgeInsets.only(bottom: 4),
-                        child: InkWell(
-                          onTap: () => _launchUrl(link),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.link,
-                                size: 18,
-                                color: AppColors.buttomVerde,
-                              ),
-                              const SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  link,
-                                  style: const TextStyle(
-                                    decoration: TextDecoration.underline,
-                                    color: AppColors.buttomVerde,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-
+                  
                   // Impacto ambiental (statistics)
                   if (challenge.statistics.isNotEmpty) ...[
                     ChallengeImpact(map: challenge.statistics),
@@ -267,6 +227,46 @@ class ActiveChallengeDetailPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
+                  if (challenge.info != null && challenge.info!.isNotEmpty) ...[
+                    const Text(
+                      "Saiba mais",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.preto,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...challenge.info!.map(
+                      (link) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: InkWell(
+                          onTap: () => _launchUrl(link),
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.link,
+                                size: 18,
+                                color: AppColors.buttomVerde,
+                              ),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  link,
+                                  style: const TextStyle(
+                                    decoration: TextDecoration.underline,
+                                    color: AppColors.buttomVerde,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
 
                   // Botão principal
                   SizedBox(
