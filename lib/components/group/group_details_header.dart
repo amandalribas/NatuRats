@@ -2,10 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-// Simple global cache to avoid re-decoding the same base64 repeatedly.
 final Map<String, Uint8List> _groupHeaderImageCache = {};
 
-// Top-level isolate-safe decoder for compute
 Uint8List _decodeBase64Isolate(String data) {
   final comma = data.indexOf(',');
   final payload = comma != -1 ? data.substring(comma + 1) : data;
@@ -18,6 +16,7 @@ class GroupDetailsHeader extends StatefulWidget {
   final int people;
   final int points;
   final VoidCallback? onInvite;
+  final VoidCallback? onLeave;
 
   const GroupDetailsHeader({
     super.key,
@@ -26,6 +25,7 @@ class GroupDetailsHeader extends StatefulWidget {
     required this.people,
     required this.points,
     this.onInvite,
+    this.onLeave,
   });
 
   @override
@@ -53,17 +53,12 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
   void _ensureImageDecoded() {
     final imageUrl = widget.imageUrl;
     if (imageUrl.isEmpty) {
-      setState(() {
-        _bytes = null;
-      });
+      setState(() => _bytes = null);
       return;
     }
 
-    // If cached, use it immediately
     if (_groupHeaderImageCache.containsKey(imageUrl)) {
-      setState(() {
-        _bytes = _groupHeaderImageCache[imageUrl];
-      });
+      setState(() => _bytes = _groupHeaderImageCache[imageUrl]);
       return;
     }
 
@@ -71,13 +66,10 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
     final isLikelyBase64 = isDataUri || imageUrl.length > 200;
 
     if (!isLikelyBase64) {
-      setState(() {
-        _bytes = null;
-      });
+      setState(() => _bytes = null);
       return;
     }
 
-    // decode in isolate
     if (_decoding) return;
     _decoding = true;
     compute(_decodeBase64Isolate, imageUrl).then((result) {
@@ -102,49 +94,91 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // IMAGEM (suporta URL ou base64). Usa cache e decode em isolate para evitar repaints/piscar.
+        // IMAGEM
         SizedBox(
           height: 180,
           width: double.infinity,
           child: _bytes != null
               ? Image.memory(
-                  _bytes!,
-                  fit: BoxFit.cover,
-                  cacheWidth: 1200,
-                  filterQuality: FilterQuality.low,
-                  errorBuilder: (context, error, stack) => Container(color: Colors.grey[300]),
-                )
+            _bytes!,
+            fit: BoxFit.cover,
+            cacheWidth: 1200,
+            filterQuality: FilterQuality.low,
+            errorBuilder: (context, error, stack) =>
+                Container(color: Colors.grey[300]),
+          )
               : Container(color: Colors.grey[300]),
         ),
 
         // ESCURECER
         Container(
           height: 180,
-          decoration: BoxDecoration(
-            color: const Color.fromRGBO(0, 0, 0, 0.45),
+          decoration: const BoxDecoration(
+            color: Color.fromRGBO(0, 0, 0, 0.45),
           ),
         ),
 
-        // BOTÃO VOLTAR + CONVIDAR
+        // BOTÕES
         SafeArea(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              // Voltar
               IconButton(
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Colors.white,
-                ),
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
               ),
-              if (widget.onInvite != null)
-                IconButton(
-                  icon: const Icon(
-                    Icons.person_add,
-                    color: Colors.white,
-                  ),
-                  onPressed: widget.onInvite,
-                ),
+              // Ações (convidar e menu)
+              Row(
+                children: [
+                  if (widget.onInvite != null)
+                    IconButton(
+                      icon: const Icon(Icons.person_add, color: Colors.white),
+                      onPressed: widget.onInvite,
+                    ),
+                  if (widget.onLeave != null)
+                    if (widget.onLeave != null)
+                      IconButton(
+                        icon: const Icon(Icons.more_vert, color: Colors.white),
+                        onPressed: () {
+                          showModalBottomSheet(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            builder: (ctx) => SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 5,
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade300,
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.exit_to_app, color: Colors.red),
+                                      title: const Text('Sair do grupo',
+                                          style: TextStyle(color: Colors.red)),
+                                      onTap: () {
+                                        Navigator.pop(ctx); 
+                                        widget.onLeave!();  
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                ],
+              ),
             ],
           ),
         ),
@@ -165,26 +199,18 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-
               const SizedBox(height: 6),
-
               Row(
                 children: [
                   const Icon(Icons.group, color: Colors.white, size: 14),
                   const SizedBox(width: 4),
-                  Text(
-                    "${widget.people}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-
+                  Text("${widget.people}",
+                      style: const TextStyle(color: Colors.white)),
                   const SizedBox(width: 12),
-
                   const Icon(Icons.emoji_events, color: Colors.white, size: 14),
                   const SizedBox(width: 4),
-                  Text(
-                    "${widget.points}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
+                  Text("${widget.points}",
+                      style: const TextStyle(color: Colors.white)),
                 ],
               ),
             ],

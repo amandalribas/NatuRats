@@ -241,4 +241,16 @@ class GroupRepository {
     final email = user.email ?? '';
     return fetchVisibleGroups(email);
   }
+
+  Future<void> removeMember(String groupId, String email) async {
+    final firestore = FirebaseFirestore.instance;
+    await firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('members')
+        .doc('members')
+        .update({
+      'emails': FieldValue.arrayRemove([email]),
+    });
+  }
 }
