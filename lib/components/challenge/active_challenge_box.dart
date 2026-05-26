@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/category_tag.dart';
 import 'package:naturats/model/challenge.dart';
 import 'package:naturats/theme/app_colors.dart';
+import 'package:naturats/components/custom_dialog.dart';
 
 class ActiveChallengeBox extends StatefulWidget {
   final Challenge challenge;
@@ -48,10 +49,7 @@ class _ActiveChallengeBoxState extends State<ActiveChallengeBox> {
 
         borderRadius: BorderRadius.circular(22),
 
-        border: Border.all(
-          color: AppColors.bgCinza,
-          width: 1.2,
-        ),
+        border: Border.all(color: AppColors.bgCinza, width: 1.2),
 
         boxShadow: [
           BoxShadow(
@@ -199,17 +197,35 @@ class _ActiveChallengeBoxState extends State<ActiveChallengeBox> {
                         onTap: () async {
                           if (_clicked) return;
 
-                          _clicked = true;
-
-                          try {
-                            if (canFinish) {
-                              await widget.onFinish(); 
-                            } else {
-                              widget.onRegister();
-                            }
-                          } finally {
-                            _clicked = false;
-                          }
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return CustomDialog(
+                                title: canFinish
+                                    ? "Completar missão"
+                                    : "Registrar progresso",
+                                desc: canFinish
+                                    ? "Tem certeza de que deseja concluir este desafio?"
+                                    : "Deseja registrar um progresso neste desafio?",
+                                primaryButtonText: "Confirmar",
+                                primaryButtonColor: canFinish
+                                    ? Colors.green.shade600
+                                    : AppColors.bgVerde,
+                                onConfirm: () async {
+                                  _clicked = true;
+                                  try {
+                                    if (canFinish) {
+                                      await widget.onFinish();
+                                    } else {
+                                      widget.onRegister();
+                                    }
+                                  } finally {
+                                    _clicked = false;
+                                  }
+                                },
+                              );
+                            },
+                          );
                         },
 
                         child: Container(

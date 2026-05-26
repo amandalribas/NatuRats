@@ -5,6 +5,7 @@ import 'package:naturats/model/challenge.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/finish_challenge_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:naturats/components/custom_dialog.dart';
 
 class ActiveChallengeDetailPage extends StatelessWidget {
   final Challenge challenge;
@@ -26,7 +27,6 @@ class ActiveChallengeDetailPage extends StatelessWidget {
   bool get canFinish => currentProgress >= goal - 1;
   String get progressText => "$currentProgress/$goal concluído";
 
-
   Future<void> _launchUrl(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
@@ -34,6 +34,7 @@ class ActiveChallengeDetailPage extends StatelessWidget {
       throw Exception('Could not launch $url');
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -123,7 +124,6 @@ class ActiveChallengeDetailPage extends StatelessWidget {
                     ),
                   ),
 
-                  // Detalhes (campo "details", se diferente da descrição)
                   if (challenge.details.isNotEmpty &&
                       challenge.details != challenge.description) ...[
                     const SizedBox(height: 16),
@@ -139,7 +139,7 @@ class ActiveChallengeDetailPage extends StatelessWidget {
                   const SizedBox(height: 24),
 
                   // Dicas / info
-                  
+
                   // Impacto ambiental (statistics)
                   if (challenge.statistics.isNotEmpty) ...[
                     ChallengeImpact(map: challenge.statistics),
@@ -269,47 +269,71 @@ class ActiveChallengeDetailPage extends StatelessWidget {
                   ],
 
                   // Botão principal
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        if (canFinish) {
-                          onFinish();
-                          Navigator.of(context).pop();
-                          await showDialog(
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 30),
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 70,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          showDialog(
                             context: context,
-                            barrierDismissible: false,
-                            builder: (_) => FinishChallengeDialog(
-                              challenge: challenge,
-                              points: challenge.duration.points,
-                            ),
+                            builder: (context) {
+                              return CustomDialog(
+                                title: canFinish
+                                    ? "Completar missão"
+                                    : "Registrar progresso",
+                                desc: canFinish
+                                    ? "Tem certeza de que deseja concluir este desafio?"
+                                    : "Deseja registrar mais um progresso neste desafio?",
+                                primaryButtonText: "Confirmar",
+                                primaryButtonColor: canFinish
+                                    ? Colors.green.shade600
+                                    : AppColors.bgVerde,
+                                onConfirm: () async {
+                                  if (canFinish) {
+                                    onFinish();
+                                    Navigator.of(context).pop();
+                                    await showDialog(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (_) => FinishChallengeDialog(
+                                        challenge: challenge,
+                                        points: challenge.duration.points,
+                                      ),
+                                    );
+                                  } else {
+                                    onRegister();
+                                    Navigator.of(context).pop();
+                                  }
+                                },
+                              );
+                            },
                           );
-                        } else {
-                          onRegister();
-                          Navigator.of(context).pop();
-                        }
-                      },
-                      icon: Icon(
-                        canFinish ? Icons.check_circle_outline : Icons.add,
-                        size: 22,
-                      ),
-                      label: Text(
-                        canFinish ? "Completar missão" : "Registrar progresso",
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        },
+                        icon: Icon(
+                          canFinish ? Icons.check_circle_outline : Icons.add,
+                          size: 22,
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: canFinish
-                            ? Colors.green.shade600
-                            : AppColors.bgVerde,
-                        foregroundColor: AppColors.branco,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        label: Text(
+                          canFinish
+                              ? "Completar missão"
+                              : "Registrar progresso",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        elevation: 0,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: canFinish
+                              ? Colors.green.shade600
+                              : AppColors.bgVerde,
+                          foregroundColor: AppColors.branco,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          elevation: 0,
+                        ),
                       ),
                     ),
                   ),
