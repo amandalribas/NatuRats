@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/model/completed_challenges.dart';
 import 'package:naturats/model/medal.dart';
@@ -36,7 +37,6 @@ class ProfileController extends ChangeNotifier {
     return _userRepository.getStreak();
   }
 
-
   int getTotalChallenges() {
     return _userRepository.getNumMissions();
   }
@@ -48,27 +48,31 @@ class ProfileController extends ChangeNotifier {
   int getTotalMedals() => _userRepository.getNumMedals();
 
   Stream<List<Medal>> getMedalsStream() {
-  return _medalService.getMedalsStream().map((medalList) {
-    final int streak = _userRepository.getStreak();
-    final int completedMissionsCount =
-        _userRepository.completedChallenges.length;
-    final stats = _userRepository.getStatistics();
+    return _medalService.getMedalsStream().map((medalList) {
+      final int streak = _userRepository.getStreak();
+      final int completedMissionsCount =
+          _userRepository.completedChallenges.length;
+      final stats = _userRepository.getStatistics();
 
-    // Preserva 'CO2' maiúsculo (como vem do Firestore/challenge.statistics)
-    final Map<String, int> statsFormatados = {
-      'CO2': stats['CO2'] ?? stats['co2'] ?? 0,
-      'co2': stats['co2'] ?? stats['CO2'] ?? 0,
-      'water': stats['water'] ?? 0,
-      'recycled': stats['recycled'] ?? 0,
-      'km': stats['km'] ?? 0,
-    };
+      // Preserva 'CO2' maiúsculo (como vem do Firestore/challenge.statistics)
+      final Map<String, int> statsFormatados = {
+        'CO2': stats['CO2'] ?? stats['co2'] ?? 0,
+        'co2': stats['co2'] ?? stats['CO2'] ?? 0,
+        'water': stats['water'] ?? 0,
+        'recycled': stats['recycled'] ?? 0,
+        'km': stats['km'] ?? 0,
+      };
 
-    for (var medal in medalList) {
-      medal.checkUnlockStatus(statsFormatados, streak, completedMissionsCount);
-    }
-    return medalList;
-  });
-}
+      for (var medal in medalList) {
+        medal.checkUnlockStatus(
+          statsFormatados,
+          streak,
+          completedMissionsCount,
+        );
+      }
+      return medalList;
+    });
+  }
 
   Stream<int> getUnlockedMedalsCountStream() {
     return getMedalsStream().map((medalList) {
@@ -78,5 +82,9 @@ class ProfileController extends ChangeNotifier {
 
   List<CompletedChallenges> getCompletedChallenges() {
     return _userRepository.completedChallenges;
+  }
+
+  Future<List<int>> getWeeklyPoints() async {
+    return _userRepository.getWeeklyPoints();
   }
 }

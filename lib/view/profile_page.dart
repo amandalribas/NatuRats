@@ -8,13 +8,12 @@ import 'package:provider/provider.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
-  
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-        create: (_) => ProfileController(context),
-        child: const _ProfileView(),
+      create: (_) => ProfileController(context),
+      child: const _ProfileView(),
     );
   }
 }
@@ -33,140 +32,155 @@ class _ProfileViewState extends State<_ProfileView> {
   @override
   Widget build(BuildContext context) {
     return Consumer<ProfileController>(
-        builder: (context, controller, child) {
-          return Scaffold(
-            backgroundColor: AppColors.branco,
-            body: Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
-                  color: AppColors.bgVerde,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundImage: controller.getProfilePic(),
+      builder: (context, controller, child) {
+        return Scaffold(
+          backgroundColor: AppColors.branco,
+          body: Column(
+            children: [
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+                color: AppColors.bgVerde,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: controller.getProfilePic(),
+                        ),
+                        const SizedBox(width: 15),
+                        Text(
+                          "${controller.fullName}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 15),
-                          Text(
-                            "${controller.fullName}",
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ConfigPage(),
+                              ),
+                            );
+                          },
+                          icon: const Icon(
+                            Icons.settings,
+                            color: AppColors.branco,
+                            size: 25,
                           ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (_) => const ConfigPage()),
+                        ),
+                      ],
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.only(left: 55),
+                      child: Text(
+                        'Nível ${controller.getUserLevel()} • ${controller.getUserPoints() + (controller.getUserLevel() * (controller.getUserLevel() - 1) * 25)} pontos',
+                        style: const TextStyle(
+                          color: AppColors.branco,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: StreamBuilder(
+                            stream: controller.getUnlockedMedalsCountStream(),
+                            builder: (context, snapshot) {
+                              final int count =
+                                  snapshot.data ?? controller.getTotalMedals();
+                              return TopStatCard(
+                                title: 'Medalhas',
+                                value: '$count',
                               );
                             },
-                            icon: const Icon(
-                              Icons.settings,
-                              color: AppColors.branco,
-                              size: 25,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TopStatCard(
+                            title: 'Sequência',
+                            value: '${controller.getSequence()}',
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TopStatCard(
+                            title: 'Desafios',
+                            value: '${controller.getTotalChallenges()}',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(_tabs.length, (index) {
+                    final isSelected = _selectedIndex == index;
+                    return Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(
+                          left: index == 0 ? 0 : 5,
+                          right: index == _tabs.length - 1 ? 0 : 5,
+                        ),
+                        child: OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              _selectedIndex = index;
+                            });
+                          },
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: isSelected
+                                ? AppColors.buttomVerde
+                                : Colors.transparent,
+                            side: BorderSide(
+                              color: isSelected
+                                  ? AppColors.buttomVerde
+                                  : Colors.grey.shade400,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 10,
+                              horizontal: 0,
                             ),
                           ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 55),
-                        child: Text(
-                        
-                          'Nível ${controller.getUserLevel()} • ${controller.getUserPoints() + (controller.getUserLevel() * (controller.getUserLevel()-1) * 25)} pontos',
-                          style: const TextStyle(
-                            color: AppColors.branco,
-                            fontSize: 15,
+                          child: Text(
+                            _tabs[index],
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.grey.shade600,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: StreamBuilder(
-                              stream: controller.getUnlockedMedalsCountStream(), builder: (context, snapshot){
-                                final int count = snapshot.data ?? controller.getTotalMedals();
-                                return TopStatCard(
-                                  title: 'Medalhas',
-                                  value: '$count',
-                                );
-                              },
-                            )
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TopStatCard(
-                              title: 'Sequência',
-                              value: '${controller.getSequence()}',
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: TopStatCard(
-                              title: 'Desafios',
-                              value: '${controller.getTotalChallenges()}',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    );
+                  }),
                 ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(_tabs.length, (index) {
-                      final isSelected = _selectedIndex == index;
-                      return Expanded(
-                        child: Padding(
-                          padding: EdgeInsets.only(
-                            left: index == 0 ? 0 : 5,
-                            right: index == _tabs.length - 1 ? 0 : 5,
-                          ),
-                          child: OutlinedButton(
-                            onPressed: () {
-                              setState(() {
-                                _selectedIndex = index;
-                              });
-                            },
-                            style: OutlinedButton.styleFrom(
-                              backgroundColor: isSelected ? AppColors.buttomVerde : Colors.transparent,
-                              side: BorderSide(
-                                color: isSelected ? AppColors.buttomVerde : Colors.grey.shade400,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 0),
-                            ),
-                            child: Text(
-                              _tabs[index],
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.grey.shade600,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                ViewSelector(selectedIndex: _selectedIndex),
-              ],
-            ),
-          );
-        }
+              ),
+              ViewSelector(selectedIndex: _selectedIndex),
+            ],
+          ),
+        );
+      },
     );
   }
 }
-
-
