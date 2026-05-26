@@ -198,11 +198,14 @@ class UserRepository extends ChangeNotifier {
 
     final lastCheckIn = _currentUser!.lastCheckInDate;
     if (lastCheckIn == null) {
-
       _currentUser!.streak = 1;
       _currentUser!.lastCheckInDate = today;
     } else {
-      final lastDay = DateTime(lastCheckIn.year, lastCheckIn.month, lastCheckIn.day);
+      final lastDay = DateTime(
+        lastCheckIn.year,
+        lastCheckIn.month,
+        lastCheckIn.day,
+      );
       final difference = today.difference(lastDay).inDays;
 
       if (difference == 0) {
@@ -219,7 +222,6 @@ class UserRepository extends ChangeNotifier {
     await _userService.update(_currentUser!);
     notifyListeners();
   }
-
 
   int getNumPoints() {
     return _currentUser?.numPoints ?? 0;
@@ -279,5 +281,31 @@ class UserRepository extends ChangeNotifier {
   void dispose() {
     _notificationService.stopTokenRefreshListener();
     super.dispose();
+  }
+
+  Future<List<int>> getWeeklyPoints() async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final List<int> points = List.filled(7, 0);
+
+    for (final challenge in completedChallenges) {
+      final completedAt = challenge.completedAt;
+      if (completedAt == null) continue;
+
+      final completedDay = DateTime(
+        completedAt.year,
+        completedAt.month,
+        completedAt.day,
+      );
+
+      final diff = today.difference(completedDay).inDays;
+
+      if (diff >= 0 && diff < 7) {
+        final index = 6 - diff; // 6 = hoje, 0 = 6 dias atrás
+        points[index] += challenge.points ?? 0;
+      }
+    }
+
+    return points;
   }
 }

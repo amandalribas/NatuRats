@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:naturats/view/feedback_page.dart';
 import 'package:naturats/view/credits_page.dart';
+import 'package:naturats/view/suggestions_page.dart';
 import '../theme/app_colors.dart';
 
 class ConfigPage extends StatelessWidget {
@@ -52,6 +53,18 @@ class ConfigPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (_) => const CreditsPage()),
+                    );
+                  },
+                ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  leading: const Icon(Icons.lightbulb_outline, color: AppColors.bgVerde),
+                  title: const Text('Sugestões de Desafios'),
+                  trailing: const Icon(Icons.chevron_right, color: AppColors.bgVerde),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => SuggestionPage()),
                     );
                   },
                 ),
