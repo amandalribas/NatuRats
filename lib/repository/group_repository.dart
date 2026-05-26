@@ -234,4 +234,11 @@ class GroupRepository {
   }
   return userGroupIds;
 }
+
+  Future<List<GroupModel>> fetchMyGroups() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return [];
+    final email = user.email ?? '';
+    return fetchVisibleGroups(email);
+  }
 }
