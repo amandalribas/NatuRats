@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:naturats/theme/app_colors.dart';
 
 final Map<String, Uint8List> _groupHeaderImageCache = {};
 
@@ -17,6 +18,7 @@ class GroupDetailsHeader extends StatefulWidget {
   final int points;
   final VoidCallback? onInvite;
   final VoidCallback? onLeave;
+  final VoidCallback? onManageMembers; 
 
   const GroupDetailsHeader({
     super.key,
@@ -26,6 +28,7 @@ class GroupDetailsHeader extends StatefulWidget {
     required this.points,
     this.onInvite,
     this.onLeave,
+    this.onManageMembers,
   });
 
   @override
@@ -100,13 +103,13 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
           width: double.infinity,
           child: _bytes != null
               ? Image.memory(
-            _bytes!,
-            fit: BoxFit.cover,
-            cacheWidth: 1200,
-            filterQuality: FilterQuality.low,
-            errorBuilder: (context, error, stack) =>
-                Container(color: Colors.grey[300]),
-          )
+                  _bytes!,
+                  fit: BoxFit.cover,
+                  cacheWidth: 1200,
+                  filterQuality: FilterQuality.low,
+                  errorBuilder: (context, error, stack) =>
+                      Container(color: Colors.grey[300]),
+                )
               : Container(color: Colors.grey[300]),
         ),
 
@@ -128,55 +131,62 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () => Navigator.pop(context),
               ),
-              // Ações (convidar e menu)
+              
               Row(
                 children: [
+                  // Convidar (se houver)
                   if (widget.onInvite != null)
                     IconButton(
                       icon: const Icon(Icons.person_add, color: Colors.white),
                       onPressed: widget.onInvite,
                     ),
+                  // Admin: Gerenciar membros
+                  if (widget.onManageMembers != null)
+                    IconButton(
+                      icon: const Icon(Icons.admin_panel_settings, color: Colors.white),
+                      onPressed: widget.onManageMembers,
+                    ),
+                  // Menu (sair)
                   if (widget.onLeave != null)
-                    if (widget.onLeave != null)
-                      IconButton(
-                        icon: const Icon(Icons.more_vert, color: Colors.white),
-                        onPressed: () {
-                          showModalBottomSheet(
-                            context: context,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                            ),
-                            builder: (ctx) => SafeArea(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 40,
-                                      height: 5,
-                                      margin: const EdgeInsets.only(bottom: 16),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade300,
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
+                    IconButton(
+                      icon: const Icon(Icons.more_vert, color: Colors.white),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          ),
+                          builder: (ctx) => SafeArea(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 40,
+                                    height: 5,
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade300,
+                                      borderRadius: BorderRadius.circular(10),
                                     ),
-                                    ListTile(
-                                      leading: const Icon(Icons.exit_to_app, color: Colors.red),
-                                      title: const Text('Sair do grupo',
-                                          style: TextStyle(color: Colors.red)),
-                                      onTap: () {
-                                        Navigator.pop(ctx); 
-                                        widget.onLeave!();  
-                                      },
-                                    ),
-                                  ],
-                                ),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.exit_to_app, color: AppColors.vermelho),
+                                    title: const Text('Sair do grupo',
+                                        style: TextStyle(color: AppColors.vermelho)),
+                                    onTap: () {
+                                      Navigator.pop(ctx);
+                                      widget.onLeave!();
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
+                    ),
                 ],
               ),
             ],

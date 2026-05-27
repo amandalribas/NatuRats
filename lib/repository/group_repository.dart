@@ -253,4 +253,50 @@ class GroupRepository {
       'emails': FieldValue.arrayRemove([email]),
     });
   }
+
+  Future<String?> getGroupCreator(String groupId) async {
+  final doc = await FirebaseFirestore.instance
+      .collection('groups')
+      .doc(groupId)
+      .collection('info')
+      .doc('info')
+      .get();
+  if (!doc.exists) return null;
+  return doc.data()?['created_by'] as String?;
+}
+
+Future<List<Map<String, dynamic>>> getGroupMembers(String groupId) async {
+  final memberDoc = await FirebaseFirestore.instance
+      .collection('groups')
+      .doc(groupId)
+      .collection('members')
+      .doc('members')
+      .get();
+  if (!memberDoc.exists) return [];
+  final emails = List<String>.from(memberDoc.data()?['emails'] ?? []);
+  
+  List<Map<String, dynamic>> members = [];
+  for (final email in emails) {
+    final userSnapshot = await FirebaseFirestore.instance
+        .collection('users')
+        .where('email', isEqualTo: email)
+        .limit(1)
+        .get();
+    if (userSnapshot.docs.isNotEmpty) {
+      final userData = userSnapshot.docs.first.data();
+      members.add({
+        'email': email,
+        'name': userData['name'] ?? email,
+        'photoUrl': userData['photoUrl'],
+      });
+    } else {
+      members.add({
+        'email': email,
+        'name': email,
+        'photoUrl': null,
+      });
+    }
+  }
+  return members;
+} 
 }

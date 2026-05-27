@@ -101,7 +101,7 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                 leading: const Icon(Icons.flag_outlined, color: Colors.red),
                 title: const Text('Denunciar post'),
                 onTap: () {
-                  Navigator.pop(ctx); 
+                  Navigator.pop(ctx);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -154,10 +154,13 @@ class _GroupFeedViewState extends State<GroupFeedView> {
               future: _getDecodedImage(activity.photoBase64),
               builder: (context, snap) {
                 final decodedImage = snap.data;
+                final hasPhoto = decodedImage != null;
 
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   elevation: 2,
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
@@ -174,61 +177,120 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                     },
                     child: Padding(
                       padding: const EdgeInsets.all(12),
-                      child: Column(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
+                          // Avatar circular com a foto da atividade (se houver) + ícone de câmera
+                          Stack(
                             children: [
                               CircleAvatar(
+                                radius: 28,
                                 backgroundColor: isMe ? Colors.green : Colors.grey,
-                                backgroundImage: decodedImage != null ? MemoryImage(decodedImage) : null,
-                                child: decodedImage == null
+                                backgroundImage: hasPhoto
+                                    ? MemoryImage(decodedImage!)
+                                    : null,
+                                child: !hasPhoto
                                     ? Text(
                                         activity.senderName.isNotEmpty
                                             ? activity.senderName[0].toUpperCase()
                                             : '?',
-                                        style: const TextStyle(color: Colors.white),
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold),
                                       )
                                     : null,
                               ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  activity.senderName,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              Text(
-                                activity.createdAt != null ? _formatTime(activity.createdAt!) : '',
-                                style: const TextStyle(fontSize: 12, color: Colors.grey),
-                              ),
-
-                              if (!isMe)
-                                IconButton(
-                                  icon: const Icon(Icons.more_vert, size: 20),
-                                  onPressed: () => _showReportBottomSheet(activity),
-                                  padding: EdgeInsets.zero,
-                                  constraints: const BoxConstraints(), 
-                                  tooltip: 'Opções',
+                              if (hasPhoto)
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    width: 18,
+                                    height: 18,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: Colors.white, width: 1.5),
+                                    ),
+                                    child: const Icon(Icons.camera_alt,
+                                        size: 10, color: Colors.white),
+                                  ),
                                 ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            activity.title,
-                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                          ),
-                          const SizedBox(height: 4),
-                          if (activity.description.isNotEmpty) Text(activity.description),
-                          const SizedBox(height: 8),
-                          Chip(
-                            backgroundColor: _missionColor(activity.missionType).withOpacity(0.2),
-                            label: Text(
-                              activity.missionType,
-                              style: TextStyle(
-                                color: _missionColor(activity.missionType),
-                                fontWeight: FontWeight.bold,
-                              ),
+                          const SizedBox(width: 12),
+                          // Texto ao lado
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Nome do autor, data e menu
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        activity.senderName,
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14),
+                                      ),
+                                    ),
+                                    Text(
+                                      activity.createdAt != null
+                                          ? _formatTime(activity.createdAt!)
+                                          : '',
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.grey),
+                                    ),
+                                    if (!isMe)
+                                      IconButton(
+                                        icon: const Icon(Icons.more_vert, size: 20),
+                                        onPressed: () =>
+                                            _showReportBottomSheet(activity),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        tooltip: 'Opções',
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                // Título da atividade
+                                Text(
+                                  activity.title,
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 6),
+                                // Chips (tipo de missão e opcional "Desafio")
+                                Wrap(
+                                  spacing: 8,
+                                  children: [
+                                    if (activity.missionType == 'challenge_share')
+                                      Chip(
+                                        backgroundColor: Colors.grey.shade200,
+                                        label: const Text('Desafio',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold)),
+                                      ),
+                                    Chip(
+                                      backgroundColor: _missionColor(
+                                              activity.missionType)
+                                          .withOpacity(0.2),
+                                      label: Text(
+                                        activity.missionType,
+                                        style: TextStyle(
+                                          color: _missionColor(
+                                              activity.missionType),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         ],
