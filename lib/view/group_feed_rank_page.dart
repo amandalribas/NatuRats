@@ -1,4 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';          // ← NOVO
+import 'package:cloud_firestore/cloud_firestore.dart';       // necessário para admin check
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/components/group/group_details_header.dart';
 import 'package:naturats/components/group/group_navigation_tabs.dart';
@@ -6,9 +7,11 @@ import 'package:naturats/components/group/group_feed_view.dart';
 import 'package:naturats/components/group/group_rank_view.dart';
 import 'package:naturats/components/group/new_activity_sheet.dart';
 import 'package:naturats/components/group/invite_member_dialog.dart';
-import 'package:naturats/repository/group_repository.dart'; 
+import 'package:naturats/repository/group_repository.dart';
 import 'package:naturats/service/group_feed_service.dart';
 import 'package:naturats/service/ranking_service.dart';
+import 'package:naturats/theme/app_colors.dart';
+import 'package:naturats/view/manage_members_page.dart';
 
 class GroupFeedRankPage extends StatefulWidget {
   final String id;
@@ -36,7 +39,39 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
   int selectedIndex = 0;
   final GroupFeedService _service = GroupFeedService();
   final RankingService _rankingService = RankingService();
-  final GroupRepository _groupRepo = GroupRepository(); 
+  final GroupRepository _groupRepo = GroupRepository();
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  bool _isAdmin = false;
+  bool _checkedAdmin = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAdmin();
+  }
+
+  Future<void> _checkAdmin() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final infoDoc = await _firestore
+        .collection('groups')
+        .doc(widget.id)
+        .collection('info')
+        .doc('info')
+        .get();
+
+    if (infoDoc.exists) {
+      final createdBy = infoDoc.data()?['created_by'] as String?;
+      setState(() {
+        _isAdmin = (createdBy == user.uid);
+        _checkedAdmin = true;
+      });
+    } else {
+      setState(() => _checkedAdmin = true);
+    }
+  }
 
   void _openNewActivitySheet() {
     showModalBottomSheet(
@@ -65,7 +100,6 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40), 
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Column(
           children: [
@@ -74,12 +108,9 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
             const Text('Sair do grupo', style: TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
-        content: SizedBox(
-          width: MediaQuery.of(ctx).size.width * 0.8,
-          child: const Text(
-            'Tem certeza de que deseja sair deste grupo?\nSuas atividades continuarão visíveis.',
-            textAlign: TextAlign.center,
-          ),
+        content: const Text(
+          'Tem certeza de que deseja sair deste grupo?\nSuas atividades continuarão visíveis.',
+          textAlign: TextAlign.center,
         ),
         actions: [
           TextButton(
@@ -88,7 +119,7 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade400,
+              backgroundColor: AppColors.vermelho,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             onPressed: () => Navigator.pop(ctx, true),
@@ -111,7 +142,7 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Você saiu do grupo.'),
-            backgroundColor: Colors.grey.shade800,
+            backgroundColor: AppColors.bgVerde,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
@@ -122,7 +153,7 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Erro ao sair do grupo. Tente novamente.'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.vermelho,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
@@ -131,15 +162,29 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
     }
   }
 
+void _manageMembers() {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) => ManageMembersPage(groupId: widget.id),
+    ),
+  ).then((_) {
+  });
+}
+
   @override
   Widget build(BuildContext context) {
+    if (!_checkedAdmin) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       floatingActionButton: selectedIndex == 0
           ? FloatingActionButton.extended(
-        onPressed: _openNewActivitySheet,
-        icon: const Icon(Icons.add),
-        label: const Text('Nova atividade'),
-      )
+              onPressed: _openNewActivitySheet,
+              icon: const Icon(Icons.add),
+              label: const Text('Nova atividade'),
+            )
           : null,
       body: Column(
         children: [
@@ -159,6 +204,7 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
               );
             },
             onLeave: _leaveGroup,
+            onManageMembers: _isAdmin ? _manageMembers : null,   // só admin vê
           ),
           GroupNavigationTabs(
             currentIndex: selectedIndex,
