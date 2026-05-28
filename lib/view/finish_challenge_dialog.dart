@@ -52,43 +52,42 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
   }
 
   Future<void> _shareToGroups() async {
-    if (_selectedGroups.isEmpty) return;
+  if (_selectedGroups.isEmpty) return;
 
-    setState(() => _isSharing = true);
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+  setState(() => _isSharing = true);
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
 
-    int successCount = 0;
-    for (final group in _selectedGroups) {
-      try {
-        await _feedService.createActivity(
-          groupId: group.id,
-          title: 'Desafio Concluído: ${widget.challenge.title}',
-          description:
-              '${user.displayName ?? 'Alguém'} completou o desafio "${widget.challenge.title}" e ganhou ${widget.points} pontos!',
-          missionType: widget.challenge.type.label,
-          imageBase64: null,
-        );
-        successCount++;
-      } catch (e) {
-        debugPrint('Erro ao compartilhar no grupo ${group.name}: $e');
-      }
-    }
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            successCount == _selectedGroups.length
-                ? 'Compartilhado em todos os grupos!'
-                : 'Compartilhado em $successCount grupo(s) (falhou em ${_selectedGroups.length - successCount})',
-          ),
-        ),
+  int successCount = 0;
+  for (final group in _selectedGroups) {
+    try {
+      await _feedService.createActivity(
+        groupId: group.id,
+        title: 'Desafio Concluído: ${widget.challenge.title}',
+        description: '${user.displayName ?? 'Alguém'} completou o desafio "${widget.challenge.title}" e ganhou ${widget.points} pontos!',
+        missionType: widget.challenge.type.label,
+        imageBase64: null,
       );
+      successCount++;
+    } catch (e) {
+      debugPrint('Erro ao compartilhar no grupo ${group.name}: $e');
     }
-
-    setState(() => _isSharing = false);
   }
+
+  if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          successCount == _selectedGroups.length
+              ? 'Compartilhado em todos os grupos!'
+              : 'Compartilhado em $successCount grupo(s) (falhou em ${_selectedGroups.length - successCount})',
+        ),
+      ),
+    );
+  }
+
+  setState(() => _isSharing = false);
+}
 
   @override
   Widget build(BuildContext context) {

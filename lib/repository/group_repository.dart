@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:naturats/model/group_model.dart';
 
 class GroupRepository {
@@ -65,79 +66,91 @@ class GroupRepository {
   }
 
   Future<List<GroupModel>> fetchVisibleGroups(String userEmail) async {
-    final firestore = FirebaseFirestore.instance;
+  final firestore = FirebaseFirestore.instance;
 
-    // Busca grupos públicos
-    final publicGroupsSnapshot = await firestore
-        .collection('groups')
-        .where('public', isEqualTo: true)
+  // Busca grupos públicos
+  final publicGroupsSnapshot = await firestore
+      .collection('groups')
+      .where('public', isEqualTo: true)
+      .get();
+  
+  // Busca grupos privados onde o usuário é membro
+  final allPrivateGroupsSnapshot = await firestore
+      .collection('groups')
+      .where('public', isEqualTo: false)
+      .get();
+
+  List<QueryDocumentSnapshot> privateGroupsSnapshot = [];
+  for (var groupDoc in allPrivateGroupsSnapshot.docs) {
+    final memberDoc = await groupDoc.reference
+        .collection('members')
+        .doc('members')
         .get();
     
-    // Busca grupos privados onde o usuário é membro
-    final allPrivateGroupsSnapshot = await firestore
-        .collection('groups')
-        .where('public', isEqualTo: false)
-        .get();
-
-    List<QueryDocumentSnapshot> privateGroupsSnapshot = [];
-    for (var groupDoc in allPrivateGroupsSnapshot.docs) {
-      final memberDoc = await groupDoc.reference
-          .collection('members')
-          .doc('members')
-          .get();
-      
-      if (memberDoc.exists) {
-        final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
-        if (emails.contains(userEmail)) {
-          privateGroupsSnapshot.add(groupDoc);
-        }
+    if (memberDoc.exists) {
+      final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+      if (emails.contains(userEmail)) {
+        privateGroupsSnapshot.add(groupDoc);
       }
     }
-
-    List<GroupModel> visibleGroups = [];
-
-    for (var doc in publicGroupsSnapshot.docs) {
-      final infoSnapshot = await doc.reference.collection('info').doc('info').get();
-      final info = infoSnapshot.data() ?? {};
-      
-      // Conta número de membros
-      final memberDoc = await doc.reference.collection('members').doc('members').get();
-      final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
-      final groupLength = emails.length;
-      final totalPoints = await calculateGroupPoints(emails);
-      
-      visibleGroups.add(GroupModel(
-        id: doc.id,
-        name: info['title'] ?? '',
-        description: info['description'] ?? '',
-        totalPeople: groupLength,
-        totalPoints: totalPoints,
-        image: info['banner'] ?? '',
-      ));
-    }
-
-    for (var doc in privateGroupsSnapshot) {
-      final infoSnapshot = await doc.reference.collection('info').doc('info').get();
-      final info = infoSnapshot.data() ?? {};
-
-      // Conta número de membros
-      final memberDoc = await doc.reference.collection('members').doc('members').get();
-      final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
-      final groupLength = emails.length;
-      final totalPoints = await calculateGroupPoints(emails);
-
-      visibleGroups.add(GroupModel(
-        id: doc.id,
-        name: info['title'] ?? '',
-        description: info['description'] ?? '',
-        totalPeople: groupLength,
-        totalPoints: totalPoints,
-        image: info['banner'] ?? '',
-      ));
-    }
-
-    return visibleGroups;
   }
+
+  List<GroupModel> visibleGroups = [];
+
+  // Processa grupos públicos
+  for (var doc in publicGroupsSnapshot.docs) {
+    final infoSnapshot = await doc.reference.collection('info').doc('info').get();
+    final info = infoSnapshot.data() ?? {};
+    
+    // Conta número de membros
+    final memberDoc = await doc.reference.collection('members').doc('members').get();
+    final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+    
+    // 🔑 SÓ ADICIONA SE O USUÁRIO FOR MEMBRO
+    if (!emails.contains(userEmail)) continue;  // ← pula este grupo
+    
+    final groupLength = emails.length;
+    final totalPoints = await calculateGroupPoints(emails);
+    
+    debugPrint('🔵 Grupo PÚBLICO: ${info['title']} - Membros: $groupLength');
+    
+    visibleGroups.add(GroupModel(
+      id: doc.id,
+      name: info['title'] ?? '',
+      description: info['description'] ?? '',
+      totalPeople: groupLength,
+      totalPoints: totalPoints,
+      image: info['banner'] ?? '',
+    ));
+  }
+
+  // Processa grupos privados onde o usuário é membro
+  for (var doc in privateGroupsSnapshot) {
+    final infoSnapshot = await doc.reference.collection('info').doc('info').get();
+    final info = infoSnapshot.data() ?? {};
+
+    // Conta número de membros
+    final memberDoc = await doc.reference.collection('members').doc('members').get();
+    final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+    final groupLength = emails.length;
+    final totalPoints = await calculateGroupPoints(emails);
+
+    debugPrint('🟢 Grupo PRIVADO: ${info['title']} - Membros: $groupLength - Pontos: $totalPoints');
+
+    visibleGroups.add(GroupModel(
+      id: doc.id,
+      name: info['title'] ?? '',
+      description: info['description'] ?? '',
+      totalPeople: groupLength,
+      totalPoints: totalPoints,
+      image: info['banner'] ?? '',
+    ));
+  }
+
+  debugPrint('📊 Total de grupos visíveis: ${visibleGroups.length}');
+  
+  return visibleGroups;
+}
 
   Future<int> calculateGroupPoints(List<dynamic> emails) async {
     final firestore = FirebaseFirestore.instance;
@@ -256,95 +269,125 @@ class GroupRepository {
   }
 
   Future<String?> getGroupCreator(String groupId) async {
-  final doc = await FirebaseFirestore.instance
-      .collection('groups')
-      .doc(groupId)
-      .collection('info')
-      .doc('info')
-      .get();
-  if (!doc.exists) return null;
-  return doc.data()?['created_by'] as String?;
-}
-
-Future<List<Map<String, dynamic>>> getGroupMembers(String groupId) async {
-  final memberDoc = await FirebaseFirestore.instance
-      .collection('groups')
-      .doc(groupId)
-      .collection('members')
-      .doc('members')
-      .get();
-  if (!memberDoc.exists) return [];
-  final emails = List<String>.from(memberDoc.data()?['emails'] ?? []);
-  
-  List<Map<String, dynamic>> members = [];
-  for (final email in emails) {
-    final userSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: email)
-        .limit(1)
+    final doc = await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(groupId)
+        .collection('info')
+        .doc('info')
         .get();
-    if (userSnapshot.docs.isNotEmpty) {
-      final userData = userSnapshot.docs.first.data();
-      members.add({
-        'email': email,
-        'name': userData['name'] ?? email,
-        'photoUrl': userData['photoUrl'],
-        'userId': userSnapshot.docs.first.id,   // ← ADICIONE userId AQUI
-      });
-    } else {
-      members.add({
-        'email': email,
-        'name': email,
-        'photoUrl': null,
-        'userId': email,   // ← ADICIONE userId AQUI
-      });
-    }
+    if (!doc.exists) return null;
+    return doc.data()?['created_by'] as String?;
   }
-  return members;
-}
 
-// ══════════════ ADMIN ══════════════
-Future<List<String>> getGroupAdmins(String groupId) async {
-  final doc = await FirebaseFirestore.instance
-      .collection('groups')
-      .doc(groupId)
-      .collection('info')
-      .doc('info')
-      .get();
-  if (!doc.exists) return [];
-  return List<String>.from(doc.data()?['admins'] ?? []);
-}
+  Future<List<Map<String, dynamic>>> getGroupMembers(String groupId) async {
+    final memberDoc = await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(groupId)
+        .collection('members')
+        .doc('members')
+        .get();
+    if (!memberDoc.exists) return [];
+    final emails = List<String>.from(memberDoc.data()?['emails'] ?? []);
+    
+    List<Map<String, dynamic>> members = [];
+    for (final email in emails) {
+      final userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isEqualTo: email)
+          .limit(1)
+          .get();
+      if (userSnapshot.docs.isNotEmpty) {
+        final userData = userSnapshot.docs.first.data();
+        members.add({
+          'email': email,
+          'name': userData['name'] ?? email,
+          'photoUrl': userData['photoUrl'],
+          'userId': userSnapshot.docs.first.id,   // ← ADICIONE userId AQUI
+        });
+      } else {
+        members.add({
+          'email': email,
+          'name': email,
+          'photoUrl': null,
+          'userId': email,   // ← ADICIONE userId AQUI
+        });
+      }
+    }
+    return members;
+  }
 
-Future<bool> isUserAdmin(String groupId, String userId) async {
-  final admins = await getGroupAdmins(groupId);
-  return admins.contains(userId);
-}
+  // ══════════════ ADMIN ══════════════
+  Future<List<String>> getGroupAdmins(String groupId) async {
+    final doc = await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(groupId)
+        .collection('info')
+        .doc('info')
+        .get();
+    if (!doc.exists) return [];
+    return List<String>.from(doc.data()?['admins'] ?? []);
+  }
 
-Future<void> addAdmin(String groupId, String userId) async {
-  await FirebaseFirestore.instance
-      .collection('groups')
-      .doc(groupId)
-      .collection('info')
-      .doc('info')
-      .update({
-    'admins': FieldValue.arrayUnion([userId]),
-  });
-}
+  Future<bool> isUserAdmin(String groupId, String userId) async {
+    final admins = await getGroupAdmins(groupId);
+    return admins.contains(userId);
+  }
 
-Future<void> removeAdmin(String groupId, String userId) async {
-  await FirebaseFirestore.instance
-      .collection('groups')
-      .doc(groupId)
-      .collection('info')
-      .doc('info')
-      .update({
-    'admins': FieldValue.arrayRemove([userId]),
-  });
-}
+  Future<void> addAdmin(String groupId, String userId) async {
+    await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(groupId)
+        .collection('info')
+        .doc('info')
+        .update({
+      'admins': FieldValue.arrayUnion([userId]),
+    });
+  }
 
-Future<bool> canLeaveGroup(String groupId, String userId) async {
-  final admins = await getGroupAdmins(groupId);
-  if (!admins.contains(userId)) return true;
-  return admins.where((id) => id != userId).isNotEmpty;
-}
+  Future<void> removeAdmin(String groupId, String userId) async {
+    await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(groupId)
+        .collection('info')
+        .doc('info')
+        .update({
+      'admins': FieldValue.arrayRemove([userId]),
+    });
+  }
+
+  Future<bool> canLeaveGroup(String groupId, String userId) async {
+    final admins = await getGroupAdmins(groupId);
+    final isAdmin = admins.contains(userId);
+    
+    // Busca total de membros
+    final memberDoc = await FirebaseFirestore.instance
+        .collection('groups')
+        .doc(groupId)
+        .collection('members')
+        .doc('members')
+        .get();
+    
+    final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+    final totalMembers = emails.length;
+    
+    // Se for o único membro, PODE sair (o grupo será deletado depois)
+    if (totalMembers <= 1) return true;
+    
+    // Se for admin com outros membros, precisa ter outro admin
+    if (isAdmin) {
+      return admins.where((id) => id != userId).isNotEmpty;
+    }
+    
+    // Membro comum com outros membros → pode sair
+    return true;
+  }
+
+  Future<void> deleteGroup(String groupId) async {
+    final firestore = FirebaseFirestore.instance;
+    
+    await firestore.collection('groups').doc(groupId).delete();
+    
+
+  }
+
 }

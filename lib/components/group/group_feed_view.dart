@@ -194,80 +194,82 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        activity.senderName,
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14),
-                                      ),
-                                    ),
-                                    Text(
-                                      activity.createdAt != null
-                                          ? _formatTime(activity.createdAt!)
-                                          : '',
-                                      style: const TextStyle(
-                                          fontSize: 12, color: Colors.grey),
-                                    ),
-                                    if (!isMe)
-                                      IconButton(
-                                        icon: const Icon(Icons.more_vert, size: 20),
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                        onPressed: () {
-                                          showModalBottomSheet(
-                                            context: context,
-                                            shape: const RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                                            ),
-                                            builder: (ctx) => SafeArea(
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Container(
-                                                    width: 40,
-                                                    height: 5,
-                                                    margin: const EdgeInsets.only(bottom: 16),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey.shade300,
-                                                      borderRadius: BorderRadius.circular(10),
-                                                    ),
-                                                  ),
-                                                  ListTile(
-                                                    leading: const Icon(Icons.flag_outlined, color: AppColors.vermelho),
-                                                    title: const Text('Denunciar post'),
-                                                    onTap: () {
-                                                      Navigator.pop(ctx);
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder: (_) => ReportPage(
-                                                            groupId: widget.groupId,
-                                                            targetId: activity.id,
-                                                            targetType: 'post',
-                                                            targetUserId: activity.senderId,
-                                                            targetName: activity.senderName,
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                  ],
-                                ),
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    Flexible(
+      child: Text(
+        activity.senderName,
+        style: const TextStyle(
+            fontWeight: FontWeight.bold, fontSize: 14),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+    const SizedBox(width: 8),
+    Text(
+      activity.createdAt != null
+          ? _formatTime(activity.createdAt!)
+          : '',
+      style: const TextStyle(fontSize: 12, color: Colors.grey),
+    ),
+    if (!isMe) ...[
+      const SizedBox(width: 4),
+      GestureDetector(
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            builder: (ctx) => SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 5,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.flag_outlined, color: AppColors.vermelho),
+                    title: const Text('Denunciar post'),
+                    onTap: () {
+                      Navigator.pop(ctx);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ReportPage(
+                            groupId: widget.groupId,
+                            targetId: activity.id,
+                            targetType: 'post',
+                            targetUserId: activity.senderId,
+                            targetName: activity.senderName,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+        child: const Icon(Icons.more_vert, size: 20),
+      ),
+    ],
+  ],
+),
                                 const SizedBox(height: 4),
                                 Text(
-                                  activity.title,
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600),
-                                ),
+                                    activity.title,
+                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 const SizedBox(height: 6),
                                 Wrap(
                                   spacing: 8,

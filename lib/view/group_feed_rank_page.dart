@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/components/group/group_details_header.dart';
@@ -69,76 +70,115 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
     );
   }
 
-  Future<void> _leaveGroup() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
+Future<void> _leaveGroup() async {
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
 
-    final canLeave = await _groupRepo.canLeaveGroup(widget.id, user.uid);
-    if (!canLeave) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Text('Não é possível sair'),
-            content: const Text('Você é o único administrador. Promova outro membro antes de sair.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
-      }
-      return;
-    }
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Column(
-          children: [
-            Icon(Icons.exit_to_app, size: 48, color: Colors.red.shade300),
-            const SizedBox(height: 8),
-            const Text('Sair do grupo', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: const Text(
-          'Tem certeza de que deseja sair deste grupo?\nSuas atividades continuarão visíveis.',
-          textAlign: TextAlign.center,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.vermelho,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Sair', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true) return;
-
-    await _groupRepo.removeMember(widget.id, user.email!);
-    await _groupRepo.removeAdmin(widget.id, user.uid).catchError((_) {});
+  // Verifica se pode sair
+  final canLeave = await _groupRepo.canLeaveGroup(widget.id, user.uid);
+  
+  if (!canLeave) {
     if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Você saiu do grupo.'),
-          backgroundColor: AppColors.bgVerde,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text('Não é possível sair'),
+          content: const Text(
+            'Você é o único administrador. Promova outro membro antes de sair.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
         ),
       );
     }
+    return;
   }
+
+  // Verifica se é o último membro
+  final memberDoc = await FirebaseFirestore.instance
+      .collection('groups')
+      .doc(widget.id)
+      .collection('members')
+      .doc('members')
+      .get();
+  final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+  final isLastMember = emails.length <= 1;
+
+  // Mensagem de confirmação diferente se for o último
+  final confirmMessage = isLastMember
+      ? 'Você é o último membro do grupo.\nSe sair, o grupo será excluído permanentemente.'
+      : 'Tem certeza de que deseja sair deste grupo?\nSuas atividades continuarão visíveis.';
+
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Column(
+        children: [
+          Icon(
+            isLastMember ? Icons.delete_forever : Icons.exit_to_app,
+            size: 48,
+            color: Colors.red.shade300,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            isLastMember ? 'Excluir grupo?' : 'Sair do grupo',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+      content: Text(
+        confirmMessage,
+        textAlign: TextAlign.center,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.vermelho,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+          onPressed: () => Navigator.pop(ctx, true),
+          child: Text(
+            isLastMember ? 'Excluir e sair' : 'Sair',
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  if (confirmed != true) return;
+
+  // Se for o último membro, deleta o grupo
+  if (isLastMember) {
+    await _groupRepo.deleteGroup(widget.id);
+  } else {
+    // Apenas remove o membro
+    await _groupRepo.removeMember(widget.id, user.email!);
+    await _groupRepo.removeAdmin(widget.id, user.uid).catchError((_) {});
+  }
+
+  if (mounted) {
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(isLastMember ? 'Grupo excluído.' : 'Você saiu do grupo.'),
+        backgroundColor: AppColors.bgVerde,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+}
 
   @override
   Widget build(BuildContext context) {
