@@ -46,15 +46,6 @@ class User {
   }
 
   factory User.fromMap(String uid, Map<String, dynamic> map) {
-    final rawStats =
-        map["statistics"] as Map<String, dynamic>? ??
-        {"CO2": 0, "water": 0, "recycled": 0, "km": 0};
-
-    final statistics = rawStats.map((key, value) {
-      final intValue =
-          int.tryParse(value.toString()) ?? (value is int ? value : 0);
-      return MapEntry(key, intValue);
-    });
 
     return User(
       id: uid,

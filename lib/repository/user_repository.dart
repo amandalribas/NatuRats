@@ -7,7 +7,6 @@ import 'package:naturats/service/challenges_service.dart';
 import 'package:naturats/service/medal_service.dart';
 import 'package:naturats/service/notification_service.dart';
 import 'package:naturats/service/user_service.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../model/user.dart';
 
 class UserRepository extends ChangeNotifier {
