@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/model/completed_challenges.dart';
 import 'package:naturats/model/medal.dart';

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:naturats/components/home/progress_box.dart';
 import 'package:naturats/components/home/statistic_box.dart';
 import '../../theme/app_colors.dart';
-import '../../view/credits_page.dart';
 
 class HomePageHeader extends StatelessWidget {
   final String name;

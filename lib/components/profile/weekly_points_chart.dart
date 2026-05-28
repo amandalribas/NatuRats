@@ -8,8 +8,6 @@ class WeeklyPointsChart extends StatelessWidget {
 
   const WeeklyPointsChart({super.key, required this.pointsPerDay});
 
-  static const _days = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'];
-
   List<String> get _labels {
     final today = DateTime.now().weekday % 7; // 0=Dom … 6=Sáb
     const labels = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
