@@ -55,6 +55,7 @@ class GroupRepository {
       'title': name,
       'updated_at': FieldValue.serverTimestamp(),
       'updated_by': userId,
+      'admins': [userId],
     });
     batch.set(groupDoc.collection('members').doc('members'), {
       'emails': [userEmail],
@@ -288,15 +289,62 @@ Future<List<Map<String, dynamic>>> getGroupMembers(String groupId) async {
         'email': email,
         'name': userData['name'] ?? email,
         'photoUrl': userData['photoUrl'],
+        'userId': userSnapshot.docs.first.id,   // ← ADICIONE userId AQUI
       });
     } else {
       members.add({
         'email': email,
         'name': email,
         'photoUrl': null,
+        'userId': email,   // ← ADICIONE userId AQUI
       });
     }
   }
   return members;
-} 
+}
+
+// ══════════════ ADMIN ══════════════
+Future<List<String>> getGroupAdmins(String groupId) async {
+  final doc = await FirebaseFirestore.instance
+      .collection('groups')
+      .doc(groupId)
+      .collection('info')
+      .doc('info')
+      .get();
+  if (!doc.exists) return [];
+  return List<String>.from(doc.data()?['admins'] ?? []);
+}
+
+Future<bool> isUserAdmin(String groupId, String userId) async {
+  final admins = await getGroupAdmins(groupId);
+  return admins.contains(userId);
+}
+
+Future<void> addAdmin(String groupId, String userId) async {
+  await FirebaseFirestore.instance
+      .collection('groups')
+      .doc(groupId)
+      .collection('info')
+      .doc('info')
+      .update({
+    'admins': FieldValue.arrayUnion([userId]),
+  });
+}
+
+Future<void> removeAdmin(String groupId, String userId) async {
+  await FirebaseFirestore.instance
+      .collection('groups')
+      .doc(groupId)
+      .collection('info')
+      .doc('info')
+      .update({
+    'admins': FieldValue.arrayRemove([userId]),
+  });
+}
+
+Future<bool> canLeaveGroup(String groupId, String userId) async {
+  final admins = await getGroupAdmins(groupId);
+  if (!admins.contains(userId)) return true;
+  return admins.where((id) => id != userId).isNotEmpty;
+}
 }

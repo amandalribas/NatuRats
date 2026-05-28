@@ -16,9 +16,8 @@ class GroupDetailsHeader extends StatefulWidget {
   final String imageUrl;
   final int people;
   final int points;
-  final VoidCallback? onInvite;
   final VoidCallback? onLeave;
-  final VoidCallback? onManageMembers; 
+  final VoidCallback? onViewMembers;
 
   const GroupDetailsHeader({
     super.key,
@@ -26,9 +25,8 @@ class GroupDetailsHeader extends StatefulWidget {
     required this.imageUrl,
     required this.people,
     required this.points,
-    this.onInvite,
     this.onLeave,
-    this.onManageMembers,
+    this.onViewMembers,
   });
 
   @override
@@ -48,9 +46,7 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
   @override
   void didUpdateWidget(covariant GroupDetailsHeader oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.imageUrl != widget.imageUrl) {
-      _ensureImageDecoded();
-    }
+    if (oldWidget.imageUrl != widget.imageUrl) _ensureImageDecoded();
   }
 
   void _ensureImageDecoded() {
@@ -59,37 +55,23 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
       setState(() => _bytes = null);
       return;
     }
-
     if (_groupHeaderImageCache.containsKey(imageUrl)) {
       setState(() => _bytes = _groupHeaderImageCache[imageUrl]);
       return;
     }
-
     final isDataUri = imageUrl.startsWith('data:image');
     final isLikelyBase64 = isDataUri || imageUrl.length > 200;
-
     if (!isLikelyBase64) {
       setState(() => _bytes = null);
       return;
     }
-
     if (_decoding) return;
     _decoding = true;
     compute(_decodeBase64Isolate, imageUrl).then((result) {
       _groupHeaderImageCache[imageUrl] = result;
-      if (mounted) {
-        setState(() {
-          _bytes = result;
-          _decoding = false;
-        });
-      }
+      if (mounted) setState(() { _bytes = result; _decoding = false; });
     }).catchError((_) {
-      if (mounted) {
-        setState(() {
-          _bytes = null;
-          _decoding = false;
-        });
-      }
+      if (mounted) setState(() { _bytes = null; _decoding = false; });
     });
   }
 
@@ -97,130 +79,47 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // IMAGEM
         SizedBox(
           height: 180,
           width: double.infinity,
           child: _bytes != null
-              ? Image.memory(
-                  _bytes!,
-                  fit: BoxFit.cover,
-                  cacheWidth: 1200,
-                  filterQuality: FilterQuality.low,
-                  errorBuilder: (context, error, stack) =>
-                      Container(color: Colors.grey[300]),
-                )
+              ? Image.memory(_bytes!, fit: BoxFit.cover, cacheWidth: 1200, filterQuality: FilterQuality.low,
+                  errorBuilder: (context, error, stack) => Container(color: Colors.grey[300]))
               : Container(color: Colors.grey[300]),
         ),
-
-        // ESCURECER
-        Container(
-          height: 180,
-          decoration: const BoxDecoration(
-            color: Color.fromRGBO(0, 0, 0, 0.45),
-          ),
-        ),
-
-        // BOTÕES
+        Container(height: 180, decoration: const BoxDecoration(color: Color.fromRGBO(0, 0, 0, 0.45))),
         SafeArea(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Voltar
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
-              
+              IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
               Row(
                 children: [
-                  // Convidar (se houver)
-                  if (widget.onInvite != null)
-                    IconButton(
-                      icon: const Icon(Icons.person_add, color: Colors.white),
-                      onPressed: widget.onInvite,
-                    ),
-                  // Admin: Gerenciar membros
-                  if (widget.onManageMembers != null)
-                    IconButton(
-                      icon: const Icon(Icons.admin_panel_settings, color: Colors.white),
-                      onPressed: widget.onManageMembers,
-                    ),
-                  // Menu (sair)
+                  if (widget.onViewMembers != null)
+                    IconButton(icon: const Icon(Icons.people, color: Colors.white), onPressed: widget.onViewMembers),
                   if (widget.onLeave != null)
-                    IconButton(
-                      icon: const Icon(Icons.more_vert, color: Colors.white),
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                          ),
-                          builder: (ctx) => SafeArea(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 40,
-                                    height: 5,
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade300,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.exit_to_app, color: AppColors.vermelho),
-                                    title: const Text('Sair do grupo',
-                                        style: TextStyle(color: AppColors.vermelho)),
-                                    onTap: () {
-                                      Navigator.pop(ctx);
-                                      widget.onLeave!();
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
+                    IconButton(icon: const Icon(Icons.exit_to_app, color: Colors.white), onPressed: widget.onLeave),
                 ],
               ),
             ],
           ),
         ),
-
-        // TEXTO
         Positioned(
-          left: 16,
-          bottom: 30,
-          right: 16,
+          left: 16, bottom: 30, right: 16,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                widget.name,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text(widget.name, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               Row(
                 children: [
                   const Icon(Icons.group, color: Colors.white, size: 14),
                   const SizedBox(width: 4),
-                  Text("${widget.people}",
-                      style: const TextStyle(color: Colors.white)),
+                  Text("${widget.people}", style: const TextStyle(color: Colors.white)),
                   const SizedBox(width: 12),
                   const Icon(Icons.emoji_events, color: Colors.white, size: 14),
                   const SizedBox(width: 4),
-                  Text("${widget.points}",
-                      style: const TextStyle(color: Colors.white)),
+                  Text("${widget.points}", style: const TextStyle(color: Colors.white)),
                 ],
               ),
             ],

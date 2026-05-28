@@ -63,7 +63,7 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
       try {
         await _feedService.createActivity(
           groupId: group.id,
-          title: '🏆 ${widget.challenge.title}',
+          title: 'Desafio Concluído: ${widget.challenge.title}',
           description:
               '${user.displayName ?? 'Alguém'} completou o desafio "${widget.challenge.title}" e ganhou ${widget.points} pontos!',
           missionType: widget.challenge.type.label,

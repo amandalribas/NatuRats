@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/model/group_activity.dart';
+import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/activity_detail_page.dart';
 import 'package:naturats/view/report_post_page.dart';
 
@@ -89,36 +90,7 @@ class _GroupFeedViewState extends State<GroupFeedView> {
     }
   }
 
-  void _showReportBottomSheet(GroupActivity activity) {
-    showModalBottomSheet(
-      context: context,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.flag_outlined, color: Colors.red),
-                title: const Text('Denunciar post'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ReportPostPage(
-                        groupId: widget.groupId,
-                        activity: activity,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -247,11 +219,48 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                                     if (!isMe)
                                       IconButton(
                                         icon: const Icon(Icons.more_vert, size: 20),
-                                        onPressed: () =>
-                                            _showReportBottomSheet(activity),
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
-                                        tooltip: 'Opções',
+                                        onPressed: () {
+                                          showModalBottomSheet(
+                                            context: context,
+                                            shape: const RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                                            ),
+                                            builder: (ctx) => SafeArea(
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Container(
+                                                    width: 40,
+                                                    height: 5,
+                                                    margin: const EdgeInsets.only(bottom: 16),
+                                                    decoration: BoxDecoration(
+                                                      color: Colors.grey.shade300,
+                                                      borderRadius: BorderRadius.circular(10),
+                                                    ),
+                                                  ),
+                                                  ListTile(
+                                                    leading: const Icon(Icons.flag_outlined, color: AppColors.vermelho),
+                                                    title: const Text('Denunciar post'),
+                                                    onTap: () {
+                                                      Navigator.pop(ctx);
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (_) => ReportPostPage(
+                                                            groupId: widget.groupId,
+                                                            activity: activity,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
                                       ),
                                   ],
                                 ),

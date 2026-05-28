@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';       // necessário para admin check
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/components/group/group_details_header.dart';
@@ -6,12 +5,11 @@ import 'package:naturats/components/group/group_navigation_tabs.dart';
 import 'package:naturats/components/group/group_feed_view.dart';
 import 'package:naturats/components/group/group_rank_view.dart';
 import 'package:naturats/components/group/new_activity_sheet.dart';
-import 'package:naturats/components/group/invite_member_dialog.dart';
 import 'package:naturats/repository/group_repository.dart';
 import 'package:naturats/service/group_feed_service.dart';
 import 'package:naturats/service/ranking_service.dart';
 import 'package:naturats/theme/app_colors.dart';
-import 'package:naturats/view/manage_members_page.dart';
+import 'package:naturats/view/group_members_page.dart';
 
 class GroupFeedRankPage extends StatefulWidget {
   final String id;
@@ -40,38 +38,6 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
   final GroupFeedService _service = GroupFeedService();
   final RankingService _rankingService = RankingService();
   final GroupRepository _groupRepo = GroupRepository();
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  bool _isAdmin = false;
-  bool _checkedAdmin = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkAdmin();
-  }
-
-  Future<void> _checkAdmin() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    final infoDoc = await _firestore
-        .collection('groups')
-        .doc(widget.id)
-        .collection('info')
-        .doc('info')
-        .get();
-
-    if (infoDoc.exists) {
-      final createdBy = infoDoc.data()?['created_by'] as String?;
-      setState(() {
-        _isAdmin = (createdBy == user.uid);
-        _checkedAdmin = true;
-      });
-    } else {
-      setState(() => _checkedAdmin = true);
-    }
-  }
 
   void _openNewActivitySheet() {
     showModalBottomSheet(
@@ -96,7 +62,38 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
     );
   }
 
+  void _openMembersPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => GroupMembersPage(groupId: widget.id)),
+    );
+  }
+
   Future<void> _leaveGroup() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final canLeave = await _groupRepo.canLeaveGroup(widget.id, user.uid);
+    if (!canLeave) {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Text('Não é possível sair'),
+            content: const Text('Você é o único administrador. Promova outro membro antes de sair.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -113,10 +110,7 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
           textAlign: TextAlign.center,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancelar'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.vermelho,
@@ -131,53 +125,23 @@ class _GroupFeedRankPageState extends State<GroupFeedRankPage> {
 
     if (confirmed != true) return;
 
-    final user = FirebaseAuth.instance.currentUser;
-    final email = user?.email;
-    if (email == null) return;
-
-    try {
-      await _groupRepo.removeMember(widget.id, email);
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Você saiu do grupo.'),
-            backgroundColor: AppColors.bgVerde,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Erro ao sair do grupo. Tente novamente.'),
-            backgroundColor: AppColors.vermelho,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
-      }
+    await _groupRepo.removeMember(widget.id, user.email!);
+    await _groupRepo.removeAdmin(widget.id, user.uid).catchError((_) {});
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Você saiu do grupo.'),
+          backgroundColor: AppColors.bgVerde,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
     }
   }
 
-void _manageMembers() {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (_) => ManageMembersPage(groupId: widget.id),
-    ),
-  ).then((_) {
-  });
-}
-
   @override
   Widget build(BuildContext context) {
-    if (!_checkedAdmin) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
     return Scaffold(
       floatingActionButton: selectedIndex == 0
           ? FloatingActionButton.extended(
@@ -193,18 +157,8 @@ void _manageMembers() {
             imageUrl: widget.imageUrl,
             people: widget.totalPeople,
             points: widget.totalPoints,
-            onInvite: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                ),
-                builder: (_) => InviteMemberDialog(groupId: widget.id),
-              );
-            },
+            onViewMembers: _openMembersPage,
             onLeave: _leaveGroup,
-            onManageMembers: _isAdmin ? _manageMembers : null,   // só admin vê
           ),
           GroupNavigationTabs(
             currentIndex: selectedIndex,
