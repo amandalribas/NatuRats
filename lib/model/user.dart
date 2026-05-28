@@ -50,7 +50,6 @@ class User {
         map["statistics"] as Map<String, dynamic>? ??
         {"CO2": 0, "water": 0, "recycled": 0, "km": 0};
 
-    // Converte valores string para int (ex: "4000" → 4000)
     final statistics = rawStats.map((key, value) {
       final intValue =
           int.tryParse(value.toString()) ?? (value is int ? value : 0);

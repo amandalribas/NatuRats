@@ -16,7 +16,7 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
   final GroupRepository _groupRepo = GroupRepository();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  List<Map<String, String>> _members = []; // email, name
+  List<Map<String, String>> _members = [];
   bool _loading = true;
 
   @override
@@ -42,8 +42,8 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
 
       List<Map<String, String>> members = [];
       for (final email in emails) {
-        // Buscar nome do usuário na coleção users
-        String name = email; // fallback
+
+        String name = email; 
         try {
           final userQuery = await _firestore
               .collection('users')
@@ -75,7 +75,7 @@ class _ManageMembersPageState extends State<ManageMembersPage> {
   }
 
   Future<void> _removeMember(String email, int index) async {
-    // Diálogo de confirmação
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(

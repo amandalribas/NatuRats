@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:naturats/model/group_activity.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/activity_detail_page.dart';
-import 'package:naturats/view/report_post_page.dart';
+import 'package:naturats/view/report_page.dart'; 
 
 Uint8List _decodeBase64Isolate(String data) {
   final comma = data.indexOf(',');
@@ -16,7 +16,6 @@ Uint8List _decodeBase64Isolate(String data) {
 
 class GroupFeedView extends StatefulWidget {
   final String groupId;
-
   const GroupFeedView({super.key, required this.groupId});
 
   @override
@@ -90,8 +89,6 @@ class _GroupFeedViewState extends State<GroupFeedView> {
     }
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<GroupActivity>>(
@@ -152,7 +149,6 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Avatar circular com a foto da atividade (se houver) + ícone de câmera
                           Stack(
                             children: [
                               CircleAvatar(
@@ -193,12 +189,10 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                             ],
                           ),
                           const SizedBox(width: 12),
-                          // Texto ao lado
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Nome do autor, data e menu
                                 Row(
                                   children: [
                                     Expanded(
@@ -248,9 +242,12 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                                                       Navigator.push(
                                                         context,
                                                         MaterialPageRoute(
-                                                          builder: (_) => ReportPostPage(
+                                                          builder: (_) => ReportPage(
                                                             groupId: widget.groupId,
-                                                            activity: activity,
+                                                            targetId: activity.id,
+                                                            targetType: 'post',
+                                                            targetUserId: activity.senderId,
+                                                            targetName: activity.senderName,
                                                           ),
                                                         ),
                                                       );
@@ -265,7 +262,6 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                                   ],
                                 ),
                                 const SizedBox(height: 4),
-                                // Título da atividade
                                 Text(
                                   activity.title,
                                   style: const TextStyle(
@@ -273,7 +269,6 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                                       fontWeight: FontWeight.w600),
                                 ),
                                 const SizedBox(height: 6),
-                                // Chips (tipo de missão e opcional "Desafio")
                                 Wrap(
                                   spacing: 8,
                                   children: [

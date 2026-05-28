@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/repository/group_repository.dart';
 import 'package:naturats/components/group/invite_member_dialog.dart';
 import 'package:naturats/theme/app_colors.dart';
+import 'package:naturats/view/report_page.dart'; 
 
 class GroupMembersPage extends StatefulWidget {
   final String groupId;
@@ -44,95 +44,6 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
     setState(() => _loading = false);
   }
 
-  // ────────────── AÇÕES ──────────────
-
-  void _showReportSheet(Map<String, dynamic> member) {
-    String? reason;
-    final descCtrl = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom,
-            left: 16, right: 16, top: 16,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 5,
-                  margin: const EdgeInsets.only(bottom: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                const Text(
-                  'Denunciar usuário',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: reason,
-                  items: ['Spam', 'Assédio', 'Conteúdo impróprio', 'Outro']
-                      .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-                      .toList(),
-                  onChanged: (v) => setModalState(() => reason = v),
-                  decoration: const InputDecoration(labelText: 'Motivo'),
-                ),
-                if (reason == 'Outro')
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: TextField(
-                      controller: descCtrl,
-                      decoration: const InputDecoration(labelText: 'Descrição'),
-                    ),
-                  ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.vermelho,
-                    minimumSize: const Size(double.infinity, 48),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () async {
-                    if (reason == null) return;
-                    await FirebaseFirestore.instance.collection('reports').add({
-                      'reporterId': _auth.currentUser!.uid,
-                      'targetUserId': member['userId'],
-                      'reason': reason,
-                      'description': reason == 'Outro' ? descCtrl.text : null,
-                      'createdAt': FieldValue.serverTimestamp(),
-                    });
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Denúncia enviada.'),
-                        backgroundColor: AppColors.vermelho,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    );
-                  },
-                  child: const Text('Enviar', style: TextStyle(color: Colors.white)),
-                ),
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   void _showOptionsSheet(Map<String, dynamic> member) {
     final isSelf = member['userId'] == _auth.currentUser?.uid;
     final isMemberAdmin = _adminIds.contains(member['userId']);
@@ -164,10 +75,15 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                   title: const Text('Denunciar usuário'),
                   onTap: () {
                     Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funcionalidade em breve.'),
-                        duration: Duration(seconds: 2),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => ReportPage(
+                          groupId: widget.groupId,
+                          targetId: member['userId'],
+                          targetType: 'user',
+                          targetUserId: member['userId'],
+                          targetName: member['name'] ?? '',
+                        ),
                       ),
                     );
                   },
@@ -333,7 +249,6 @@ class _GroupMembersPageState extends State<GroupMembersPage> {
                             ],
                           ],
                         ),
-                        // Só mostra os três pontinhos se NÃO for o próprio usuário
                         trailing: isSelf
                             ? null
                             : IconButton(
