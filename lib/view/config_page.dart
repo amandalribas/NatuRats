@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:naturats/components/custom_dialog.dart';
 import 'package:naturats/view/feedback_page.dart';
 import 'package:naturats/view/credits_page.dart';
 import 'package:naturats/view/suggestions_page.dart';
+import 'package:provider/provider.dart';
+import '../repository/user_repository.dart';
 import '../theme/app_colors.dart';
 
 class ConfigPage extends StatelessWidget {
@@ -68,6 +71,19 @@ class ConfigPage extends StatelessWidget {
                     );
                   },
                 ),
+                const Divider(height: 1, indent: 16, endIndent: 16),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: AppColors.bgVerde),
+                  title: const Text('Sair da conta'),
+                  onTap: () async {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return _logoutDialog(context);
+                      }
+                    );
+                  }
+                ),
               ],
             ),
           ),
@@ -89,6 +105,20 @@ class ConfigPage extends StatelessWidget {
           letterSpacing: 0.5,
         ),
       ),
+    );
+  }
+
+  Widget _logoutDialog(BuildContext context) {
+    return CustomDialog(
+        title: "Sair",
+        desc: "Tem certeza de que deseja desconectar esta conta?",
+        primaryButtonText: "Sair",
+        primaryButtonColor: AppColors.vermelho,
+        onConfirm: () async {
+          final userRepository = context.read<UserRepository>();
+          await userRepository.logout();
+          Navigator.pop(context);
+        },
     );
   }
 }
