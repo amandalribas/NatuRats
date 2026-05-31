@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:naturats/controller/invitation_controller.dart';
 import 'package:naturats/model/invitation.dart';
 import 'package:naturats/theme/app_colors.dart';
+import 'package:share_plus/share_plus.dart';
 
 class GroupHeader extends StatefulWidget {
   const GroupHeader({super.key});
@@ -114,6 +115,22 @@ class _GroupHeaderState extends State<GroupHeader> {
                   ),
                 ],
               ),
+            ),
+
+            // Botão para compartilhar link do app
+            IconButton(
+              onPressed: () {
+                SharePlus.instance.share(
+                  ShareParams(text: 'Baixe o NatuRats pelo link a seguir e junte-se a nossa comunidade: https://drive.google.com/drive/folders/1CJSHFFZ-f2lgKEvsXQBFclUFDKsGYVQs?usp=drive_link')
+                );
+              },
+              icon: const Icon(
+                Icons.group_add,
+                color: AppColors.branco,
+                size: 28,
+              ),
+              padding: const EdgeInsets.all(12),
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             ),
 
             // Ícone de notificações com badge
