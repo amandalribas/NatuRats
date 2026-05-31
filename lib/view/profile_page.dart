@@ -48,17 +48,24 @@ class _ProfileViewState extends State<_ProfileView> {
                       children: [
                         CircleAvatar(
                           backgroundImage: controller.getProfilePic(),
+                          backgroundColor: Colors.white24,
+                          child: controller.getProfilePic() == null
+                              ? const Icon(Icons.person, color: Colors.white)
+                              : null,
                         ),
                         const SizedBox(width: 15),
-                        Text(
-                          "${controller.fullName}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            controller.fullName ?? 'Usuário',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        const Spacer(),
                         IconButton(
                           onPressed: () {
                             Navigator.push(
