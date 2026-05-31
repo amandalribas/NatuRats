@@ -13,6 +13,8 @@ class User {
   int streak;
   Map<String, int>? statistics;
   DateTime? lastCheckInDate;
+  Map<String, String>? lastCheckInReminderSentSlots;
+  DateTime? lastCheckInReminderSentAt;
 
   User({
     required this.id,
@@ -27,10 +29,12 @@ class User {
     required this.streak,
     required this.statistics,
     this.lastCheckInDate,
+    this.lastCheckInReminderSentSlots,
+    this.lastCheckInReminderSentAt,
   });
 
   Map<String, dynamic> toMap() {
-    return {
+    final data = {
       "email": email,
       "name": name,
       "created_at": createdAt,
@@ -41,11 +45,22 @@ class User {
       "num_missions": numMissions,
       "streak": streak,
       "statistics": statistics,
-      "last_check_in_date": lastCheckInDate, 
+      "last_check_in_date": lastCheckInDate,
     };
+
+    if (lastCheckInReminderSentSlots != null) {
+      data["last_checkin_reminder_sent_slots"] = lastCheckInReminderSentSlots;
+    }
+
+    if (lastCheckInReminderSentAt != null) {
+      data["last_checkin_reminder_sent_at"] = lastCheckInReminderSentAt;
+    }
+
+    return data;
   }
 
   factory User.fromMap(String uid, Map<String, dynamic> map) {
+    final reminderSlots = map["last_checkin_reminder_sent_slots"];
 
     return User(
       id: uid,
@@ -62,6 +77,13 @@ class User {
         map["statistics"] ?? {"CO2": 0, "water": 0, "recycled": 0, "km": 0},
       ),
       lastCheckInDate: (map["last_check_in_date"] as Timestamp?)?.toDate(),
+      lastCheckInReminderSentSlots: reminderSlots is Map
+          ? reminderSlots.map(
+              (key, value) => MapEntry(key.toString(), value.toString()),
+            )
+          : null,
+      lastCheckInReminderSentAt:
+          (map["last_checkin_reminder_sent_at"] as Timestamp?)?.toDate(),
     );
   }
 }
