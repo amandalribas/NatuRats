@@ -77,13 +77,17 @@ class _GroupPageState extends State<GroupPage> {
 
           const SizedBox(height: 12),
 
+          // Tabs
           AnimatedBuilder(
             animation: _groupController,
             builder: (context, _) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
+                // Tabs
                 child: Row(
                   children: [
+
+                    // Meus grupos
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -118,6 +122,7 @@ class _GroupPageState extends State<GroupPage> {
 
                     const SizedBox(width: 12),
 
+                    // Geral
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -157,6 +162,7 @@ class _GroupPageState extends State<GroupPage> {
 
           const SizedBox(height: 20),
 
+          // Lista de grupos
           Expanded(
             child: AnimatedBuilder(
               animation: _groupController,
@@ -182,7 +188,7 @@ class _GroupPageState extends State<GroupPage> {
                     horizontal: 16,
                   ),
                   itemCount: groups.length,
-                  separatorBuilder: (_, __) =>
+                  separatorBuilder: (_, _) =>
                       const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     return GroupCard(

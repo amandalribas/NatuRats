@@ -106,9 +106,6 @@ class GroupRepository {
     final memberDoc = await doc.reference.collection('members').doc('members').get();
     final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
     
-    // 🔑 SÓ ADICIONA SE O USUÁRIO FOR MEMBRO
-    if (!emails.contains(userEmail)) continue;  // ← pula este grupo
-    
     final groupLength = emails.length;
     final totalPoints = await calculateGroupPoints(emails);
     
