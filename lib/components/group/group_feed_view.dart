@@ -4,9 +4,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/model/group_activity.dart';
+import 'package:naturats/repository/group_repository.dart'; // ← NOVO
+import 'package:naturats/service/group_feed_service.dart'; // ← NOVO
 import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/activity_detail_page.dart';
-import 'package:naturats/view/report_page.dart'; 
+import 'package:naturats/view/report_page.dart';
 
 Uint8List _decodeBase64Isolate(String data) {
   final comma = data.indexOf(',');
@@ -26,6 +28,33 @@ class _GroupFeedViewState extends State<GroupFeedView> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final Map<String, Uint8List> _imageCache = {};
+
+  final GroupRepository _groupRepo = GroupRepository(); // ← NOVO
+  final GroupFeedService _feedService = GroupFeedService(); // ← NOVO
+
+  bool _isAdmin = false; // ← NOVO
+  bool _adminChecked = false; // ← NOVO
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAdmin();
+  }
+
+  Future<void> _checkAdmin() async {
+    final user = _auth.currentUser;
+    if (user != null) {
+      final isAdmin = await _groupRepo.isUserAdmin(widget.groupId, user.uid);
+      if (mounted) {
+        setState(() {
+          _isAdmin = isAdmin;
+          _adminChecked = true;
+        });
+      }
+    } else {
+      if (mounted) setState(() => _adminChecked = true);
+    }
+  }
 
   Stream<List<GroupActivity>> _activitiesStream() {
     return _firestore
@@ -68,7 +97,8 @@ class _GroupFeedViewState extends State<GroupFeedView> {
     final diff = now.difference(time);
     if (diff.inMinutes < 1) return 'agora';
     if (diff.inHours < 1) return '${diff.inMinutes} min';
-    if (diff.inDays < 1) return '${time.hour}:${time.minute.toString().padLeft(2, '0')}';
+    if (diff.inDays < 1)
+      return '${time.hour}:${time.minute.toString().padLeft(2, '0')}';
     return '${time.day}/${time.month} ${time.hour}:${time.minute.toString().padLeft(2, '0')}';
   }
 
@@ -153,14 +183,16 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                             children: [
                               CircleAvatar(
                                 radius: 28,
-                                backgroundColor: isMe ? Colors.green : Colors.grey,
+                                backgroundColor:
+                                    isMe ? Colors.green : Colors.grey,
                                 backgroundImage: hasPhoto
                                     ? MemoryImage(decodedImage!)
                                     : null,
                                 child: !hasPhoto
                                     ? Text(
                                         activity.senderName.isNotEmpty
-                                            ? activity.senderName[0].toUpperCase()
+                                            ? activity.senderName[0]
+                                                .toUpperCase()
                                             : '?',
                                         style: const TextStyle(
                                             color: Colors.white,
@@ -193,93 +225,64 @@ class _GroupFeedViewState extends State<GroupFeedView> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-  crossAxisAlignment: CrossAxisAlignment.center,
-  children: [
-    Flexible(
-      child: Text(
-        activity.senderName,
-        style: const TextStyle(
-            fontWeight: FontWeight.bold, fontSize: 14),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
-    ),
-    const SizedBox(width: 8),
-    Text(
-      activity.createdAt != null
-          ? _formatTime(activity.createdAt!)
-          : '',
-      style: const TextStyle(fontSize: 12, color: Colors.grey),
-    ),
-    if (!isMe) ...[
-      const SizedBox(width: 4),
-      GestureDetector(
-        onTap: () {
-          showModalBottomSheet(
-            context: context,
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            builder: (ctx) => SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 5,
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.flag_outlined, color: AppColors.vermelho),
-                    title: const Text('Denunciar post'),
-                    onTap: () {
-                      Navigator.pop(ctx);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ReportPage(
-                            groupId: widget.groupId,
-                            targetId: activity.id,
-                            targetType: 'post',
-                            targetUserId: activity.senderId,
-                            targetName: activity.senderName,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-        child: const Icon(Icons.more_vert, size: 20),
-      ),
-    ],
-  ],
-),
+                                Stack(
+                                  children: [
+                                    Row(
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            activity.senderName,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          activity.createdAt != null
+                                              ? _formatTime(activity.createdAt!)
+                                              : '',
+                                          style: const TextStyle(
+                                              fontSize: 12, color: AppColors.bgCinza),
+                                        ),
+                                      ],
+                                    ),
+                                    if (!isMe || _isAdmin)
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: GestureDetector(
+                                          onTap: () => _showOptionsSheet(activity),
+                                          child: const Icon(Icons.more_vert, size: 20),
+                                        ),
+                                      ),
+                                  ],
+                                ),
                                 const SizedBox(height: 4),
                                 Text(
-                                    activity.title,
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  activity.title,
+                                  style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                                 const SizedBox(height: 6),
                                 Wrap(
                                   spacing: 8,
                                   children: [
-                                    if (activity.missionType == 'challenge_share')
+                                    if (activity.missionType ==
+                                        'challenge_share')
                                       Chip(
-                                        backgroundColor: Colors.grey.shade200,
+                                        backgroundColor:
+                                            Colors.grey.shade200,
                                         label: const Text('Desafio',
                                             style: TextStyle(
-                                                fontWeight: FontWeight.bold)),
+                                                fontWeight:
+                                                    FontWeight.bold)),
                                       ),
                                     Chip(
                                       backgroundColor: _missionColor(
@@ -309,6 +312,114 @@ class _GroupFeedViewState extends State<GroupFeedView> {
           },
         );
       },
+    );
+  }
+
+  // ────────── BOTTOM SHEET COM OPÇÕES ──────────
+  void _showOptionsSheet(GroupActivity activity) {
+    final isMe = (activity.senderId == _auth.currentUser?.uid);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 5,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            // Denunciar (só aparece para posts de outros)
+            if (!isMe)
+              ListTile(
+                leading: const Icon(Icons.flag_outlined,
+                    color: AppColors.vermelho),
+                title: const Text('Denunciar post'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ReportPage(
+                        groupId: widget.groupId,
+                        targetId: activity.id,
+                        targetType: 'post',
+                        targetUserId: activity.senderId,
+                        targetName: activity.senderName,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            // Apagar (só para admins)
+            if (_isAdmin)
+              ListTile(
+                leading:
+                    const Icon(Icons.delete, color: AppColors.vermelho),
+                title: const Text('Apagar',
+                    style: TextStyle(color: AppColors.vermelho)),
+                onTap: () async {
+                  Navigator.pop(ctx);
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20)),
+                      title: const Text('Apagar post'),
+                      content: const Text(
+                          'Tem certeza que deseja apagar este post permanentemente?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancelar'),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.vermelho,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Apagar',
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    try {
+                      await _feedService.deleteActivity(
+                        groupId: widget.groupId,
+                        activityId: activity.id,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Post apagado.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Erro ao apagar.'),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
+                    }
+                  }
+                },
+              ),
+          ],
+        ),
+      ),
     );
   }
 }

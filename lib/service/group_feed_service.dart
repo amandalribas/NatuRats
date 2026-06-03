@@ -78,4 +78,16 @@ class GroupFeedService {
     final payload = comma != -1 ? data.substring(comma + 1) : data;
     return base64Decode(payload);
   }
+
+  Future<void> deleteActivity({
+    required String groupId,
+    required String activityId,
+  }) async {
+    await _firestore
+        .collection('groups')
+        .doc(groupId)
+        .collection('activities')
+        .doc(activityId)
+        .delete();
+  }
 }
