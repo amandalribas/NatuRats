@@ -38,12 +38,13 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
   }
 
   Future<void> _loadGroups() async {
+
     setState(() => _loadingGroups = true);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       final email = user.email ?? '';
       try {
-        _groups = await _groupRepo.fetchVisibleGroups(email);
+        _groups = await _groupRepo.fetchUserMemberGroups(email);
       } catch (e) {
         debugPrint('Erro ao carregar grupos: $e');
       }
