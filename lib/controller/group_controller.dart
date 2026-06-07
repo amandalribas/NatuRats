@@ -6,9 +6,6 @@ import 'package:naturats/repository/group_repository.dart';
 class GroupController extends ChangeNotifier {
   late final GroupRepository _groupRepository = GroupRepository();
 
-  List<GroupModel> _allGroups = [];
-  Set<String> _myGroupIds = {};
-
   List<GroupModel> _myGroups = [];
   List<GroupModel> _generalGroups = [];
 
@@ -85,6 +82,6 @@ class GroupController extends ChangeNotifier {
 
     _myGroups.clear();
     _generalGroups.clear();
-    await loadGroups();
+    await loadGroups(forceRefresh: true);
   }
 }
