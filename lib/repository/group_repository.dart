@@ -177,27 +177,111 @@ class GroupRepository {
     return visibleGroups;
   }
 
+  Future<List<GroupModel>> fetchMyGroupsOnly(String userEmail) async {
+    final firestore = FirebaseFirestore.instance;
+    final allGroupsSnapshot = await firestore.collection('groups').get();
+  
+    // 1. Dispara a leitura da subcoleção 'members' de TODOS os grupos em paralelo
+    final membersSnapshots = await Future.wait(
+      allGroupsSnapshot.docs.map((doc) => doc.reference.collection('members').doc('members').get())
+    );
+  
+    List<Future<GroupModel?>> tasks = [];
+  
+    for (int i = 0; i < allGroupsSnapshot.docs.length; i++) {
+      final groupDoc = allGroupsSnapshot.docs[i];
+      final memberDoc = membersSnapshots[i];
+  
+      if (memberDoc.exists) {
+        final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+        
+        // Se o usuário pertence ao grupo, agenda a busca detalhada
+        if (emails.contains(userEmail)) {
+          tasks.add(() async {
+            final infoSnapshot = await groupDoc.reference.collection('info').doc('info').get();
+            final info = infoSnapshot.data() ?? {};
+            final totalPoints = await calculateGroupPoints(emails);
+  
+            return GroupModel(
+              id: groupDoc.id,
+              name: info['title'] ?? '',
+              description: info['description'] ?? '',
+              totalPeople: emails.length,
+              totalPoints: totalPoints,
+              image: info['banner'] ?? '',
+            );
+          }());
+        }
+      }
+    }
+  
+    // 2. Executa todo o processamento de dados e pontos em paralelo
+    final results = await Future.wait(tasks);
+    return results.whereType<GroupModel>().toList();
+  }
+  
+  Future<List<GroupModel>> fetchGeneralGroupsOnly(String userEmail) async {
+    final firestore = FirebaseFirestore.instance;
+    
+    // Busca apenas os grupos públicos de forma direta
+    final publicGroupsSnapshot = await firestore
+        .collection('groups')
+        .where('public', isEqualTo: true)
+        .get();
+  
+    // 1. Dispara a leitura de membros de todos os públicos em paralelo
+    final membersSnapshots = await Future.wait(
+      publicGroupsSnapshot.docs.map((doc) => doc.reference.collection('members').doc('members').get())
+    );
+  
+    List<Future<GroupModel?>> tasks = [];
+  
+    for (int i = 0; i < publicGroupsSnapshot.docs.length; i++) {
+      final groupDoc = publicGroupsSnapshot.docs[i];
+      final memberDoc = membersSnapshots[i];
+      final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
+  
+      // Se o usuário NÃO faz parte do grupo público, ele vai para a aba Geral
+      if (!emails.contains(userEmail)) {
+        tasks.add(() async {
+          final infoSnapshot = await groupDoc.reference.collection('info').doc('info').get();
+          final info = infoSnapshot.data() ?? {};
+          final totalPoints = await calculateGroupPoints(emails);
+  
+          return GroupModel(
+            id: groupDoc.id,
+            name: info['title'] ?? '',
+            description: info['description'] ?? '',
+            totalPeople: emails.length,
+            totalPoints: totalPoints,
+            image: info['banner'] ?? '',
+          );
+        }());
+      }
+    }
+  
+    // 2. Executa em paralelo o cálculo de pontos e info de todos os grupos gerais
+    final results = await Future.wait(tasks);
+    return results.whereType<GroupModel>().toList();
+  }
+
   Future<int> calculateGroupPoints(List<dynamic> emails) async {
     final firestore = FirebaseFirestore.instance;
 
+    // Busca os dados de todos os membros do grupo simultaneamente
+    final userQueries = await Future.wait(
+      emails.map((email) => firestore.collection('users').where('email', isEqualTo: email).limit(1).get())
+    );
+
     int totalPoints = 0;
 
-    for (final email in emails) {
-      final userSnapshot = await firestore
-          .collection('users')
-          .where('email', isEqualTo: email)
-          .limit(1)
-          .get();
-
+    for (final userSnapshot in userQueries) {
       if (userSnapshot.docs.isNotEmpty) {
         final userData = userSnapshot.docs.first.data();
-
         final currentPoints = (userData['num_points'] ?? 0) as int;
         final level = (userData['level'] ?? 1) as int;
 
-        final userTotalPoints = currentPoints + (level * (level - 1) * 25);
-
-        totalPoints += userTotalPoints;
+        totalPoints += currentPoints + (level * (level - 1) * 25); //
       }
     }
 

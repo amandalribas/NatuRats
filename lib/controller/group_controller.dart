@@ -9,48 +9,50 @@ class GroupController extends ChangeNotifier {
   List<GroupModel> _allGroups = [];
   Set<String> _myGroupIds = {};
 
+  List<GroupModel> _myGroups = [];
+  List<GroupModel> _generalGroups = [];
+
   String _searchText = "";
   bool isLoading = false;
 
   // TAB INICIAL
   String selectedTab = 'my_groups';
 
-  List<GroupModel> get groups {
-    List<GroupModel> filtered;
 
-    if (selectedTab == 'my_groups') {
-      filtered =
-          _allGroups.where((g) => _myGroupIds.contains(g.id)).toList();
-    } else {
-      filtered =
-          _allGroups.where((g) => !_myGroupIds.contains(g.id)).toList();
-    }
+  List<GroupModel> get groups {
+    List<GroupModel> currentList = (selectedTab == 'my_groups') ? _myGroups : _generalGroups;
 
     if (_searchText.isNotEmpty) {
-      filtered = filtered
-          .where(
-            (g) => g.name.toLowerCase().contains(_searchText),
-          )
+      return currentList
+          .where((g) => g.name.toLowerCase().contains(_searchText))
           .toList();
     }
 
-    return filtered;
+    return currentList;
   }
 
-  Future<List<GroupModel>> loadGroups() async {
+  Future<void> loadGroups({bool forceRefresh = false}) async {
+    // Se a lista já tem dados e não foi pedido um refresh forçado, não faz nada (evita re-queries)
+    if (selectedTab == 'my_groups' && _myGroups.isNotEmpty && !forceRefresh) return;
+    if (selectedTab == 'general' && _generalGroups.isNotEmpty && !forceRefresh) return;
+
     isLoading = true;
     notifyListeners();
 
-    final userEmail = FirebaseAuth.instance.currentUser!.email!;
+    try {
+      final userEmail = FirebaseAuth.instance.currentUser!.email!;
 
-    _allGroups = await _groupRepository.fetchVisibleGroups(userEmail);
-
-    _myGroupIds = await _groupRepository.getUserGroupIds(userEmail);
-
-    isLoading = false;
-    notifyListeners();
-
-    return groups;
+      if (selectedTab == 'my_groups') {
+        _myGroups = await _groupRepository.fetchMyGroupsOnly(userEmail);
+      } else {
+        _generalGroups = await _groupRepository.fetchGeneralGroupsOnly(userEmail);
+      }
+    } catch (e) {
+      debugPrint("Erro ao carregar aba $selectedTab: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
   void setTab(String tab) {
@@ -58,6 +60,9 @@ class GroupController extends ChangeNotifier {
 
     selectedTab = tab;
     notifyListeners();
+
+    // Carrega os dados da nova aba caso ainda não tenham sido buscados
+    loadGroups();
   }
 
   void updateSearch(String value) {
@@ -78,6 +83,8 @@ class GroupController extends ChangeNotifier {
       isPublic: isPublic,
     );
 
+    _myGroups.clear();
+    _generalGroups.clear();
     await loadGroups();
   }
 }
