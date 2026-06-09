@@ -17,6 +17,7 @@ class _GroupFormPageState extends State<GroupFormPage> {
   final TextEditingController _descriptionController = TextEditingController();
   String _imageBase64 = '';
   bool _isPublic = false;
+  bool _isLoading = false;
 
   void _onImageSelected(String base64Image) {
     setState(() {
@@ -35,12 +36,20 @@ class _GroupFormPageState extends State<GroupFormPage> {
       return;
     }
 
+    setState(() {
+      _isLoading = true;
+    });
+
     await _groupController.createGroup(
       name: name,
       description: description,
       imageBase64: _imageBase64,
       isPublic: _isPublic,
     );
+
+    setState(() {
+      _isLoading = false;
+    });
 
     if (!mounted) return;
 
@@ -91,8 +100,17 @@ class _GroupFormPageState extends State<GroupFormPage> {
           const SizedBox(height: 20),
           const Spacer(),
           ElevatedButton(
-            onPressed: _handleCreateGroup,
-            child: const Text('Criar Grupo'),
+            onPressed: _isLoading ? null : _handleCreateGroup,
+            child: _isLoading
+                ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+                : const Text('Criar Grupo'),
           ),
           const SizedBox(height: 20),
         ],
