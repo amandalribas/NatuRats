@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../model/challenge.dart';
 import 'active_challenge_box.dart';
 import 'package:naturats/view/challenge_active_detail_page.dart';
-import 'package:naturats/view/finish_challenge_dialog.dart';
+import 'package:naturats/utils/dialog_utils.dart';
 
 class ActiveChallengesListWidget extends StatefulWidget {
   final Function(Challenge) onTap;
@@ -25,78 +25,63 @@ class ActiveChallengesListWidget extends StatefulWidget {
 
 class _ActiveChallengesListWidgetState
     extends State<ActiveChallengesListWidget> {
-  
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<HomeController>();
 
     if (widget.loading) {
-      return const Expanded(child: Center(child: CircularProgressIndicator()));
+      return const Center(child: CircularProgressIndicator());
     }
 
     if (widget.challenges.isEmpty) {
-      return const Expanded(
-        child: Center(
-          child: Text(
-            "Nenhum desafio ativo",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-          ),
+      return const Center(
+        child: Text(
+          "Nenhum desafio ativo",
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
       );
     }
 
-    return Expanded(
-      child: ListView.separated(
-        padding: const EdgeInsets.only(top: 12, bottom: 24),
-        itemCount: widget.challenges.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 2),
-        itemBuilder: (context, index) {
-          final challenge = widget.challenges[index];
-          final currentProgress = controller.getProgress(challenge.id);
-          final goal = challenge.goal;
+    return ListView.separated(
+      padding: const EdgeInsets.only(top: 12, bottom: 24),
+      itemCount: widget.challenges.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 2),
+      itemBuilder: (_, index) {
+        final challenge = widget.challenges[index];
+        final currentProgress = controller.getProgress(challenge.id);
+        final goal = challenge.goal;
 
-          return ActiveChallengeBox(
-            challenge: challenge,
-            currentProgress: currentProgress,
-            goal: goal,
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => ActiveChallengeDetailPage(
-                    challenge: challenge,
-                    currentProgress: currentProgress,
-                    goal: goal,
-                    onRegister: () => controller.incrementProgress(challenge),
-                    onFinish: () async {
-                      await controller.completeChallenge(challenge);
-                      await showDialog(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (_) => FinishChallengeDialog(
-                          challenge: challenge,
-                          points: challenge.duration.points,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              );
-            },
-            onRegister: () => controller.incrementProgress(challenge),
-            onFinish: () async {
-              await controller.completeChallenge(challenge);
-              await showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (_) => FinishChallengeDialog(
+        return ActiveChallengeBox(
+          challenge: challenge,
+          currentProgress: currentProgress,
+          goal: goal,
+          onTap: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (pageContext) => ActiveChallengeDetailPage(
                   challenge: challenge,
-                  points: challenge.duration.points,
+                  currentProgress: currentProgress,
+                  goal: goal,
+                  onRegister: () => controller.incrementProgress(challenge),
+                  onFinish: () async {
+                    // pop já é feito dentro de ActiveChallengeDetailPage
+                    // antes de chamar onFinish, então aqui só concluímos
+                    // e exibimos o diálogo de parabéns.
+                    await controller.completeChallenge(challenge);
+                    DialogUtils.showFinishChallengeDialog(challenge);
+                  },
                 ),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            );
+          },
+          onRegister: () => controller.incrementProgress(challenge),
+          onFinish: () async {
+            await controller.completeChallenge(challenge);
+            DialogUtils.showFinishChallengeDialog(challenge);
+          },
+        );
+      },
     );
   }
 }

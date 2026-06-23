@@ -12,7 +12,7 @@ class ActiveChallengeDetailPage extends StatelessWidget {
   final int currentProgress;
   final int goal;
   final VoidCallback onRegister;
-  final VoidCallback onFinish;
+  final Future<void> Function() onFinish;
 
   const ActiveChallengeDetailPage({
     super.key,
@@ -276,41 +276,33 @@ class ActiveChallengeDetailPage extends StatelessWidget {
                       height: 70,
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) {
-                              return CustomDialog(
-                                title: canFinish
-                                    ? "Completar missão"
-                                    : "Registrar progresso",
-                                desc: canFinish
-                                    ? "Tem certeza de que deseja concluir este desafio?"
-                                    : "Deseja registrar mais um progresso neste desafio?",
-                                primaryButtonText: "Confirmar",
-                                primaryButtonColor: canFinish
-                                    ? Colors.green.shade600
-                                    : AppColors.bgVerde,
-                                onConfirm: () async {
-                                  if (canFinish) {
-                                    onFinish();
-                                    Navigator.of(context).pop();
-                                    await showDialog(
-                                      context: context,
-                                      barrierDismissible: false,
-                                      builder: (_) => FinishChallengeDialog(
-                                        challenge: challenge,
-                                        points: challenge.duration.points,
-                                      ),
-                                    );
-                                  } else {
-                                    onRegister();
-                                    Navigator.of(context).pop();
-                                  }
-                                },
-                              );
-                            },
-                          );
-                        },
+  showDialog(
+    context: context,
+    builder: (dialogContext) {  
+      return CustomDialog(
+        title: canFinish ? "Completar missão" : "Registrar progresso",
+        desc: canFinish
+            ? "Tem certeza de que deseja concluir este desafio?"
+            : "Deseja registrar mais um progresso neste desafio?",
+        primaryButtonText: "Confirmar",
+        primaryButtonColor: canFinish ? Colors.green.shade600 : AppColors.bgVerde,
+        onConfirm: () async {
+          if (canFinish) {
+            // Primeiro fecha a tela de detalhe, depois executa onFinish.
+            // Isso evita o flash preto: a tela já saiu da pilha antes de
+            // qualquer rebuild causado por completeChallenge/notifyListeners.
+            if (context.mounted) Navigator.of(context).pop();
+            await onFinish();
+          } else {
+            // Registra progresso e volta pra home page.
+            onRegister();
+            if (context.mounted) Navigator.of(context).pop();
+          }
+        },
+      );
+    },
+  );
+},
                         icon: Icon(
                           canFinish ? Icons.check_circle_outline : Icons.add,
                           size: 22,

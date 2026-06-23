@@ -74,5 +74,5 @@ class UserService {
       rethrow;
     }
   }
-  
+
 }

@@ -6,9 +6,14 @@ import 'package:naturats/components/group/group_search_bar.dart';
 import 'package:naturats/controller/group_controller.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/group_form_page.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class GroupPage extends StatefulWidget {
-  const GroupPage({super.key});
+  final GlobalKey? fabKey;
+  final GlobalKey? searchKey;
+  final GlobalKey? tabsKey;
+
+  const GroupPage({super.key, this.fabKey, this.searchKey, this.tabsKey});
 
   @override
   State<GroupPage> createState() => _GroupPageState();
@@ -53,17 +58,51 @@ class _GroupPageState extends State<GroupPage> {
     return Scaffold(
       backgroundColor: AppColors.branco,
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showOptions(context),
-        backgroundColor: AppColors.bgVerde,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
-        child: const Icon(
-          Icons.add,
-          color: AppColors.bgCinza,
-        ),
-      ),
+      floatingActionButton: widget.fabKey == null
+          ? FloatingActionButton(
+              onPressed: () => _showOptions(context),
+              backgroundColor: AppColors.bgVerde,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: const Icon(
+                Icons.add,
+                color: AppColors.bgCinza,
+              ),
+            )
+          : Showcase(
+              key: widget.fabKey!,
+              title: "Criar ou entrar em um grupo",
+              description:
+                  "Toque aqui para criar um novo grupo ou entrar em um grupo existente usando um código de convite.",
+              targetShapeBorder: const CircleBorder(),
+              overlayColor: AppColors.bgVerde.withOpacity(0.85),
+              overlayOpacity: 0.85,
+              titleTextStyle: const TextStyle(
+                color: AppColors.preto,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+              descTextStyle: const TextStyle(
+                color: AppColors.textCinza,
+                fontSize: 14,
+                height: 1.5,
+              ),
+              tooltipBackgroundColor: Colors.white,
+              tooltipBorderRadius: BorderRadius.circular(20),
+              tooltipPadding: const EdgeInsets.all(20),
+              child: FloatingActionButton(
+                onPressed: () => _showOptions(context),
+                backgroundColor: AppColors.bgVerde,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: const Icon(
+                  Icons.add,
+                  color: AppColors.bgCinza,
+                ),
+              ),
+            ),
 
       body: Column(
         children: [
@@ -71,9 +110,34 @@ class _GroupPageState extends State<GroupPage> {
 
           const SizedBox(height: 15),
 
-          GroupSearchBar(
-            onChanged: _groupController.updateSearch,
-          ),
+          widget.searchKey == null
+              ? GroupSearchBar(
+                  onChanged: _groupController.updateSearch,
+                )
+              : Showcase(
+                  key: widget.searchKey!,
+                  title: "Buscar grupos",
+                  description:
+                      "Use a busca para encontrar rapidamente um grupo pelo nome.",
+                  overlayColor: AppColors.bgVerde.withOpacity(0.85),
+                  overlayOpacity: 0.85,
+                  titleTextStyle: const TextStyle(
+                    color: AppColors.preto,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  descTextStyle: const TextStyle(
+                    color: AppColors.textCinza,
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                  tooltipBackgroundColor: Colors.white,
+                  tooltipBorderRadius: BorderRadius.circular(20),
+                  tooltipPadding: const EdgeInsets.all(20),
+                  child: GroupSearchBar(
+                    onChanged: _groupController.updateSearch,
+                  ),
+                ),
 
           const SizedBox(height: 12),
 
@@ -81,13 +145,10 @@ class _GroupPageState extends State<GroupPage> {
           AnimatedBuilder(
             animation: _groupController,
             builder: (context, _) {
-              return Padding(
+              final tabsRow = Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                // Tabs
                 child: Row(
                   children: [
-
-                    // Meus grupos
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -97,21 +158,18 @@ class _GroupPageState extends State<GroupPage> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color:
-                                _groupController.selectedTab == 'my_groups'
-                                    ? AppColors.buttomVerde
-                                    : AppColors.bgCinza,
+                            color: _groupController.selectedTab == 'my_groups'
+                                ? AppColors.buttomVerde
+                                : AppColors.bgCinza,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Center(
                             child: Text(
                               'Meus grupos',
                               style: TextStyle(
-                                color:
-                                    _groupController.selectedTab ==
-                                            'my_groups'
-                                        ? AppColors.branco
-                                        : AppColors.textCinza,
+                                color: _groupController.selectedTab == 'my_groups'
+                                    ? AppColors.branco
+                                    : AppColors.textCinza,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -119,10 +177,7 @@ class _GroupPageState extends State<GroupPage> {
                         ),
                       ),
                     ),
-
                     const SizedBox(width: 12),
-
-                    // Geral
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
@@ -132,21 +187,18 @@ class _GroupPageState extends State<GroupPage> {
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color:
-                                _groupController.selectedTab == 'general'
-                                    ? AppColors.buttomVerde
-                                    : AppColors.bgCinza,
+                            color: _groupController.selectedTab == 'general'
+                                ? AppColors.buttomVerde
+                                : AppColors.bgCinza,
                             borderRadius: BorderRadius.circular(30),
                           ),
                           child: Center(
                             child: Text(
                               'Geral',
                               style: TextStyle(
-                                color:
-                                    _groupController.selectedTab ==
-                                            'general'
-                                        ? AppColors.branco
-                                        : AppColors.textCinza,
+                                color: _groupController.selectedTab == 'general'
+                                    ? AppColors.branco
+                                    : AppColors.textCinza,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -157,12 +209,36 @@ class _GroupPageState extends State<GroupPage> {
                   ],
                 ),
               );
+
+              return widget.tabsKey == null
+                  ? tabsRow
+                  : Showcase(
+                      key: widget.tabsKey!,
+                      title: "Meus grupos / Geral",
+                      description:
+                          "Alterne aqui entre os grupos que você participa e a lista geral de todos os grupos disponíveis.",
+                      overlayColor: AppColors.bgVerde.withOpacity(0.85),
+                      overlayOpacity: 0.85,
+                      titleTextStyle: const TextStyle(
+                        color: AppColors.preto,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      descTextStyle: const TextStyle(
+                        color: AppColors.textCinza,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                      tooltipBackgroundColor: Colors.white,
+                      tooltipBorderRadius: BorderRadius.circular(20),
+                      tooltipPadding: const EdgeInsets.all(20),
+                      child: tabsRow,
+                    );
             },
           ),
 
           const SizedBox(height: 20),
 
-          // Lista de grupos
           Expanded(
             child: AnimatedBuilder(
               animation: _groupController,
@@ -184,12 +260,9 @@ class _GroupPageState extends State<GroupPage> {
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: groups.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(height: 12),
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     return GroupCard(
                       group: groups[index],

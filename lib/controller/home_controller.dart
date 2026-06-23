@@ -13,6 +13,7 @@ class HomeController extends ChangeNotifier {
   bool loading = true;
   List<Challenge> activeChallenges = [];
   String? firstName;
+  bool _disposed = false;   // ← ADICIONADO
 
   final Map<String, int> _progressCache = {};
   static const String _progressKeyPrefix = 'challenge_progress_';
@@ -36,11 +37,15 @@ class HomeController extends ChangeNotifier {
     await _loadAllProgresses();
 
     loading = false;
-    notifyListeners();
+    if (!_disposed) {          // ← PROTEÇÃO
+      notifyListeners();
+    }
   }
 
   void _onUserRepositoryChanged() {
-    notifyListeners();
+    if (!_disposed) {          // ← PROTEÇÃO
+      notifyListeners();
+    }
   }
 
   void _getFirstName() {
@@ -66,7 +71,9 @@ class HomeController extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_progressKeyPrefix + challengeId, progress);
     _progressCache[challengeId] = progress;
-    notifyListeners();
+    if (!_disposed) {          // ← PROTEÇÃO
+      notifyListeners();
+    }
   }
 
   Future<void> incrementProgress(Challenge challenge) async {
@@ -74,7 +81,6 @@ class HomeController extends ChangeNotifier {
     if (current >= challenge.goal) return;
     int newProgress = current + 1;
     await saveProgress(challenge.id, newProgress);
-    // Isso atualiza a streak e notifica o UserRepository
     await _userRepository.updateStreakOnCheckIn();
   }
 
@@ -100,11 +106,15 @@ class HomeController extends ChangeNotifier {
     _progressCache.remove(challenge.id);
 
     activeChallenges.removeWhere((c) => c.id == challenge.id);
-    notifyListeners();
+    
+    if (!_disposed) {          // ← AQUI estava o erro
+      notifyListeners();
+    }
   }
 
   @override
   void dispose() {
+    _disposed = true;          // ← MARCA COMO DISPOSTO
     _userRepository.removeListener(_onUserRepositoryChanged);
     super.dispose();
   }

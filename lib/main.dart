@@ -8,24 +8,28 @@ import 'package:naturats/theme/app_colors.dart';
 import 'package:provider/provider.dart';
 import 'firebase_options.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Handling background message: ${message.messageId}');
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   runApp(MultiProvider(
-      providers: [
-        ChangeNotifierProvider<UserRepository>(create: (context) => UserRepository()),
-        Provider<ChallengesRepository>(create: (context) => ChallengesRepository()),
-  ], child: const NaturatsApp()));
+    providers: [
+      ChangeNotifierProvider<UserRepository>(
+          create: (context) => UserRepository()),
+      Provider<ChallengesRepository>(
+          create: (context) => ChallengesRepository()),
+    ],
+    child: const NaturatsApp(),
+  ));
 }
 
 class NaturatsApp extends StatelessWidget {
@@ -34,11 +38,12 @@ class NaturatsApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: "NatuRats",
       home: const StartController(),
       theme: ThemeData(
-        colorScheme: .fromSeed(seedColor: AppColors.bgVerde),
-      )
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.bgVerde),
+      ),
     );
   }
 }

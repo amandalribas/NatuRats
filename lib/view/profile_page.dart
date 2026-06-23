@@ -5,21 +5,28 @@ import 'package:naturats/controller/profile_controller.dart';
 import 'package:naturats/theme/app_colors.dart';
 import 'package:naturats/view/config_page.dart';
 import 'package:provider/provider.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final GlobalKey? settingsKey;
+  final GlobalKey? statTabsKey;
+
+  const ProfilePage({super.key, this.settingsKey, this.statTabsKey});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => ProfileController(context),
-      child: const _ProfileView(),
+      child: _ProfileView(settingsKey: settingsKey, statTabsKey: statTabsKey),
     );
   }
 }
 
 class _ProfileView extends StatefulWidget {
-  const _ProfileView();
+  final GlobalKey? settingsKey;
+  final GlobalKey? statTabsKey;
+
+  const _ProfileView({this.settingsKey, this.statTabsKey});
 
   @override
   State<_ProfileView> createState() => _ProfileViewState();
@@ -66,21 +73,59 @@ class _ProfileViewState extends State<_ProfileView> {
                             ),
                           ),
                         ),
-                        IconButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const ConfigPage(),
+                        widget.settingsKey == null
+                            ? IconButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ConfigPage(),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(
+                                  Icons.settings,
+                                  color: AppColors.branco,
+                                  size: 25,
+                                ),
+                              )
+                            : Showcase(
+                                key: widget.settingsKey!,
+                                title: "Configurações",
+                                description:
+                                    "Toque aqui para acessar as configurações da sua conta, como dados pessoais, notificações e logout.",
+                                targetShapeBorder: const CircleBorder(),
+                                overlayColor: AppColors.bgVerde.withOpacity(0.85),
+                                overlayOpacity: 0.85,
+                                titleTextStyle: const TextStyle(
+                                  color: AppColors.preto,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                descTextStyle: const TextStyle(
+                                  color: AppColors.textCinza,
+                                  fontSize: 14,
+                                  height: 1.5,
+                                ),
+                                tooltipBackgroundColor: Colors.white,
+                                tooltipBorderRadius: BorderRadius.circular(20),
+                                tooltipPadding: const EdgeInsets.all(20),
+                                child: IconButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const ConfigPage(),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.settings,
+                                    color: AppColors.branco,
+                                    size: 25,
+                                  ),
+                                ),
                               ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.settings,
-                            color: AppColors.branco,
-                            size: 25,
-                          ),
-                        ),
                       ],
                     ),
 
@@ -130,64 +175,93 @@ class _ProfileViewState extends State<_ProfileView> {
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 20,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(_tabs.length, (index) {
-                    final isSelected = _selectedIndex == index;
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: index == 0 ? 0 : 5,
-                          right: index == _tabs.length - 1 ? 0 : 5,
-                        ),
-                        child: OutlinedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedIndex = index;
-                            });
-                          },
-                          style: OutlinedButton.styleFrom(
-                            backgroundColor: isSelected
-                                ? AppColors.buttomVerde
-                                : Colors.transparent,
-                            side: BorderSide(
-                              color: isSelected
-                                  ? AppColors.buttomVerde
-                                  : Colors.grey.shade400,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 0,
-                            ),
-                          ),
-                          child: Text(
-                            _tabs[index],
-                            style: TextStyle(
-                              color: isSelected
-                                  ? Colors.white
-                                  : Colors.grey.shade600,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
+              _statTabsRow(),
               ViewSelector(selectedIndex: _selectedIndex),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _statTabsRow() {
+    final row = Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 20,
+        vertical: 20,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: List.generate(_tabs.length, (index) {
+          final isSelected = _selectedIndex == index;
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: index == 0 ? 0 : 5,
+                right: index == _tabs.length - 1 ? 0 : 5,
+              ),
+              child: OutlinedButton(
+                onPressed: () {
+                  setState(() {
+                    _selectedIndex = index;
+                  });
+                },
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: isSelected
+                      ? AppColors.buttomVerde
+                      : Colors.transparent,
+                  side: BorderSide(
+                    color: isSelected
+                        ? AppColors.buttomVerde
+                        : Colors.grey.shade400,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 0,
+                  ),
+                ),
+                child: Text(
+                  _tabs[index],
+                  style: TextStyle(
+                    color: isSelected
+                        ? Colors.white
+                        : Colors.grey.shade600,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+
+    if (widget.statTabsKey == null) return row;
+
+    return Showcase(
+      key: widget.statTabsKey!,
+      title: "Estatísticas, Medalhas e Histórico",
+      description:
+          "Alterne entre suas estatísticas gerais, as medalhas conquistadas e o histórico de desafios concluídos.",
+      overlayColor: AppColors.bgVerde.withOpacity(0.85),
+      overlayOpacity: 0.85,
+      titleTextStyle: const TextStyle(
+        color: AppColors.preto,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+      descTextStyle: const TextStyle(
+        color: AppColors.textCinza,
+        fontSize: 14,
+        height: 1.5,
+      ),
+      tooltipBackgroundColor: Colors.white,
+      tooltipBorderRadius: BorderRadius.circular(20),
+      tooltipPadding: const EdgeInsets.all(20),
+      child: row,
     );
   }
 }

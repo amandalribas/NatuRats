@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:naturats/model/challenge.dart';
 import 'package:naturats/model/completed_challenges.dart';
@@ -307,4 +308,21 @@ class UserRepository extends ChangeNotifier {
 
     return points;
   }
+Future<bool> isNewUser() async {
+  final userId = getCurrentUserId();
+  if (userId == null) return false;
+
+  final doc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .get();
+
+  if (!doc.exists) return false;
+
+  final createdAt = (doc.data()?['created_at'] as Timestamp?)?.toDate();
+  if (createdAt == null) return false;
+
+  return DateTime.now().difference(createdAt).inSeconds < 10;
+}
+  
 }

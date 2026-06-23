@@ -4,6 +4,8 @@ import 'package:naturats/view/login_page.dart';
 import 'package:naturats/view/splash_page.dart';
 import 'package:naturats/view/tabs_page.dart';
 import 'package:provider/provider.dart';
+import 'package:naturats/repository/user_repository.dart';
+import 'package:naturats/view/tabs_page.dart';
 
 class RedirectionData {
   bool signedIn;
@@ -44,14 +46,26 @@ class _StartPageState extends State<StartController> {
   }
 
   Widget handleRedirection(RedirectionData redirectionData) {
-    if (redirectionData.isLoading) {
-      return SplashPage();
-    }
-
-    if (!redirectionData.signedIn) {
-      return LoginPage();
-    }
-
-    return TabsPage();
+  if (redirectionData.isLoading) {
+    return SplashPage();
   }
+
+  if (!redirectionData.signedIn) {
+    return LoginPage();
+  }
+
+  // Obtém o repositório do usuário
+  final userRepo = context.read<UserRepository>();
+
+  return FutureBuilder<bool>(
+    future: userRepo.isNewUser(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const Center(child: CircularProgressIndicator());
+      }
+      final showTutorial = snapshot.data ?? false;
+      return TabsPage(showTutorial: showTutorial);
+    },
+  );
+}
 }

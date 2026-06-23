@@ -16,16 +16,15 @@ class ChallengesListWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: loading
-          ? const Center(
+    return loading
+        ? const Center(
         child: CircularProgressIndicator(),
       )
-          : challenges.isEmpty
-          ? const Center(
+        : challenges.isEmpty
+        ? const Center(
         child: Text("Nenhum desafio encontrado"),
       )
-          : ListView.builder(
+        : ListView.builder(
         itemCount: challenges.length,
         itemBuilder: (context, index) {
           final challenge =
@@ -37,7 +36,6 @@ class ChallengesListWidget extends StatelessWidget {
             },
           );
         },
-      ),
-    );
+      );
   }
 }
