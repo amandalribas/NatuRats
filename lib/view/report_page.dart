@@ -1,4 +1,3 @@
-// lib/pages/report_page.dart
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../controller/report_controller.dart';
@@ -8,10 +7,10 @@ import '../view/report_reason_view.dart';
 
 class ReportPage extends StatefulWidget {
   final String groupId;
-  final String targetId;  
-  final String targetType;  
-  final String targetUserId; 
-  final String targetName;  
+  final String targetId;
+  final String targetType;
+  final String targetUserId;
+  final String targetName;
 
   const ReportPage({
     super.key,
@@ -28,6 +27,8 @@ class ReportPage extends StatefulWidget {
 
 class _ReportPageState extends State<ReportPage> {
   late final ReportController _controller;
+  bool _checkingLimit = true;
+  bool _limitReached = false;
 
   @override
   void initState() {
@@ -40,6 +41,35 @@ class _ReportPageState extends State<ReportPage> {
       targetUserId: widget.targetUserId,
       targetName: widget.targetName,
     );
+    _checkLimit();
+  }
+
+  Future<void> _checkLimit() async {
+    final repo = ReportRepository();
+    final targetId = widget.targetType == 'post'
+        ? widget.targetId
+        : widget.targetUserId;
+
+
+    final uid = await _controller.getCurrentUserUid();
+    if (uid == null) {
+      if (mounted) setState(() => _checkingLimit = false);
+      return;
+    }
+
+    final count = await repo.countUserReportsForTarget(
+      reporterUid: uid,
+      groupId: widget.groupId,
+      targetId: targetId,
+      targetType: widget.targetType,
+    );
+
+    if (mounted) {
+      setState(() {
+        _limitReached = count >= 3;
+        _checkingLimit = false;
+      });
+    }
   }
 
   @override
@@ -80,13 +110,15 @@ class _ReportPageState extends State<ReportPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
               ),
               onPressed: () {
-                Navigator.pop(ctx);    // fecha o diálogo
-                Navigator.pop(context); // fecha a ReportPage
+                Navigator.pop(ctx);
+                Navigator.pop(context);
               },
-              child: const Text('Fechar', style: TextStyle(color: Colors.white)),
+              child:
+                  const Text('Fechar', style: TextStyle(color: Colors.white)),
             ),
           ),
           const SizedBox(height: 8),
@@ -97,7 +129,10 @@ class _ReportPageState extends State<ReportPage> {
 
   @override
   Widget build(BuildContext context) {
-    final title = widget.targetType == 'post' ? 'Denunciar post' : 'Denunciar usuário';
+    final title =
+        widget.targetType == 'post' ? 'Denunciar post' : 'Denunciar usuário';
+    final targetWord =
+        widget.targetType == 'post' ? 'post' : 'usuário';
 
     return Scaffold(
       backgroundColor: AppColors.branco,
@@ -113,9 +148,55 @@ class _ReportPageState extends State<ReportPage> {
           ),
         ),
       ),
-      body: ReportReasonView(
-        controller: _controller,
-        onReportSubmitted: _showSuccessMessage,
+      body: _checkingLimit
+          ? const Center(child: CircularProgressIndicator())
+          : _limitReached
+              ? _buildLimitReached(targetWord)
+              : ReportReasonView(
+                  controller: _controller,
+                  onReportSubmitted: _showSuccessMessage,
+                ),
+    );
+  }
+
+  Widget _buildLimitReached(String targetWord) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.block, size: 64, color: Colors.grey.shade300),
+            const SizedBox(height: 20),
+            Text(
+              'Limite atingido',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Você já denunciou este $targetWord 3 vezes neste grupo.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+            ),
+            const SizedBox(height: 28),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.bgVerde,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              ),
+              child:
+                  const Text('Voltar', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
       ),
     );
   }

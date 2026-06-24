@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../controller/report_controller.dart';
 import '../model/report.dart';
@@ -39,6 +38,8 @@ class _ReportDescriptionViewState extends State<ReportDescriptionView> {
       // Volta para a tela de seleção de motivo informando sucesso
       Navigator.pop(context, true);
     }
+    // Se success == false, widget.controller.errorMessage já foi setado
+    // e o ListenableBuilder abaixo vai mostrar o erro automaticamente.
   }
 
   @override
@@ -102,55 +103,68 @@ class _ReportDescriptionViewState extends State<ReportDescriptionView> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.bgVerde, width: 1.5),
+                    borderSide:
+                        const BorderSide(color: AppColors.bgVerde, width: 1.5),
                   ),
                   contentPadding: const EdgeInsets.all(16),
                 ),
               ),
             ),
 
-            if (widget.controller.hasError)
-              Padding(
-                padding: const EdgeInsets.only(top: 12),
-                child: Text(
-                  widget.controller.errorMessage!,
-                  style: const TextStyle(color: Colors.red, fontSize: 13),
-                ),
-              ),
             const SizedBox(height: 24),
-            // Botão de envio
+
+            // ÚNICO ListenableBuilder envolvendo erro + botão.
+            // Antes o Text de erro estava FORA do builder reativo, então
+            // quando o controller chamava notifyListeners() após bloquear
+            // a denúncia (limite atingido), só o botão era reconstruído —
+            // a mensagem de erro nunca aparecia na tela.
             ListenableBuilder(
               listenable: widget.controller,
               builder: (context, _) {
-                return SizedBox(
-                  height: 48,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.vermelho,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (widget.controller.hasError)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          widget.controller.errorMessage!,
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 13),
+                        ),
                       ),
-                      elevation: 0,
-                    ),
-                    onPressed: widget.controller.isLoading ? null : _submit,
-                    child: widget.controller.isLoading
-                        ? const SizedBox(
-                            height: 22,
-                            width: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Text(
-                            'Enviar denúncia',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
+                    SizedBox(
+                      height: 48,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.vermelho,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                  ),
+                          elevation: 0,
+                        ),
+                        onPressed:
+                            widget.controller.isLoading ? null : _submit,
+                        child: widget.controller.isLoading
+                            ? const SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.5,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'Enviar denúncia',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
                 );
               },
             ),

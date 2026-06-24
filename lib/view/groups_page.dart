@@ -32,9 +32,7 @@ class _GroupPageState extends State<GroupPage> {
     final action = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => const GroupOptionsSheet(),
     );
@@ -43,13 +41,11 @@ class _GroupPageState extends State<GroupPage> {
 
     final created = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
-        builder: (context) => const GroupFormPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const GroupFormPage()),
     );
 
     if (created == true) {
-      await _groupController.loadGroups();
+      await _groupController.loadGroups(forceRefresh: true);
     }
   }
 
@@ -57,7 +53,6 @@ class _GroupPageState extends State<GroupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.branco,
-
       floatingActionButton: widget.fabKey == null
           ? FloatingActionButton(
               onPressed: () => _showOptions(context),
@@ -65,16 +60,13 @@ class _GroupPageState extends State<GroupPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15),
               ),
-              child: const Icon(
-                Icons.add,
-                color: AppColors.bgCinza,
-              ),
+              child: const Icon(Icons.add, color: AppColors.bgCinza),
             )
           : Showcase(
               key: widget.fabKey!,
-              title: "Criar ou entrar em um grupo",
+              title: 'Criar ou entrar em um grupo',
               description:
-                  "Toque aqui para criar um novo grupo ou entrar em um grupo existente usando um código de convite.",
+                  'Toque aqui para criar um novo grupo ou entrar em um grupo existente usando um código de convite.',
               targetShapeBorder: const CircleBorder(),
               overlayColor: AppColors.bgVerde.withOpacity(0.85),
               overlayOpacity: 0.85,
@@ -97,28 +89,20 @@ class _GroupPageState extends State<GroupPage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
-                child: const Icon(
-                  Icons.add,
-                  color: AppColors.bgCinza,
-                ),
+                child: const Icon(Icons.add, color: AppColors.bgCinza),
               ),
             ),
-
       body: Column(
         children: [
           const GroupHeader(),
-
           const SizedBox(height: 15),
-
           widget.searchKey == null
-              ? GroupSearchBar(
-                  onChanged: _groupController.updateSearch,
-                )
+              ? GroupSearchBar(onChanged: _groupController.updateSearch)
               : Showcase(
                   key: widget.searchKey!,
-                  title: "Buscar grupos",
+                  title: 'Buscar grupos',
                   description:
-                      "Use a busca para encontrar rapidamente um grupo pelo nome.",
+                      'Use a busca para encontrar rapidamente um grupo pelo nome.',
                   overlayColor: AppColors.bgVerde.withOpacity(0.85),
                   overlayOpacity: 0.85,
                   titleTextStyle: const TextStyle(
@@ -138,7 +122,6 @@ class _GroupPageState extends State<GroupPage> {
                     onChanged: _groupController.updateSearch,
                   ),
                 ),
-
           const SizedBox(height: 12),
 
           // Tabs
@@ -151,9 +134,7 @@ class _GroupPageState extends State<GroupPage> {
                   children: [
                     Expanded(
                       child: GestureDetector(
-                        onTap: () {
-                          _groupController.setTab('my_groups');
-                        },
+                        onTap: () => _groupController.setTab('my_groups'),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -167,9 +148,10 @@ class _GroupPageState extends State<GroupPage> {
                             child: Text(
                               'Meus grupos',
                               style: TextStyle(
-                                color: _groupController.selectedTab == 'my_groups'
-                                    ? AppColors.branco
-                                    : AppColors.textCinza,
+                                color:
+                                    _groupController.selectedTab == 'my_groups'
+                                        ? AppColors.branco
+                                        : AppColors.textCinza,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -180,9 +162,7 @@ class _GroupPageState extends State<GroupPage> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: GestureDetector(
-                        onTap: () {
-                          _groupController.setTab('general');
-                        },
+                        onTap: () => _groupController.setTab('general'),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 10),
@@ -196,9 +176,10 @@ class _GroupPageState extends State<GroupPage> {
                             child: Text(
                               'Geral',
                               style: TextStyle(
-                                color: _groupController.selectedTab == 'general'
-                                    ? AppColors.branco
-                                    : AppColors.textCinza,
+                                color:
+                                    _groupController.selectedTab == 'general'
+                                        ? AppColors.branco
+                                        : AppColors.textCinza,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -214,9 +195,9 @@ class _GroupPageState extends State<GroupPage> {
                   ? tabsRow
                   : Showcase(
                       key: widget.tabsKey!,
-                      title: "Meus grupos / Geral",
+                      title: 'Meus grupos / Geral',
                       description:
-                          "Alterne aqui entre os grupos que você participa e a lista geral de todos os grupos disponíveis.",
+                          'Alterne aqui entre os grupos que você participa e a lista geral de todos os grupos disponíveis.',
                       overlayColor: AppColors.bgVerde.withOpacity(0.85),
                       overlayOpacity: 0.85,
                       titleTextStyle: const TextStyle(
@@ -244,18 +225,14 @@ class _GroupPageState extends State<GroupPage> {
               animation: _groupController,
               builder: (context, _) {
                 if (_groupController.isLoading) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
+                  return const Center(child: CircularProgressIndicator());
                 }
 
                 final groups = _groupController.groups;
 
                 if (groups.isEmpty) {
                   return const Center(
-                    child: Text(
-                      "Nenhum grupo encontrado",
-                    ),
+                    child: Text('Nenhum grupo encontrado'),
                   );
                 }
 
@@ -266,6 +243,8 @@ class _GroupPageState extends State<GroupPage> {
                   itemBuilder: (context, index) {
                     return GroupCard(
                       group: groups[index],
+                      // Ao voltar de qualquer página de grupo, recarrega a lista
+                      onReturn: () => _groupController.refreshCurrentTab(),
                     );
                   },
                 );

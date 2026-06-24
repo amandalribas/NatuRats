@@ -1,4 +1,4 @@
-// lib/controller/report_controller.dart
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../model/report.dart';
 import '../service/report_service.dart';
@@ -8,8 +8,8 @@ class ReportController extends ChangeNotifier {
   final String groupId;
   final String activityId;
   final String targetType;
-  final String targetUserId; 
-  final String targetName; 
+  final String targetUserId;
+  final String targetName;
 
   ReportType? _selectedType;
   String _description = '';
@@ -21,8 +21,8 @@ class ReportController extends ChangeNotifier {
     required this.groupId,
     required this.activityId,
     required this.targetType,
-    required this.targetUserId, 
-    required this.targetName, 
+    required this.targetUserId,
+    required this.targetName,
   }) : _service = service;
 
   ReportType? get selectedType => _selectedType;
@@ -30,6 +30,11 @@ class ReportController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasError => _errorMessage != null;
+
+  /// Retorna o UID do usuário atual (usado pela ReportPage para checar limite).
+  Future<String?> getCurrentUserUid() async {
+    return FirebaseAuth.instance.currentUser?.uid;
+  }
 
   void selectType(ReportType type) {
     _selectedType = type;
@@ -53,18 +58,18 @@ class ReportController extends ChangeNotifier {
       await _service.submitReport(
         groupId: groupId,
         activityId: activityId,
+        targetType: targetType,
         type: _selectedType!,
         description: _description,
-        targetUserId: targetUserId, 
-        targetName: targetName, 
-        
+        targetUserId: targetUserId,
+        targetName: targetName,
       );
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e) {
       _isLoading = false;
-      _errorMessage = e.toString();
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
     }

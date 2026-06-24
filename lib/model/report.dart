@@ -23,12 +23,16 @@ const Map<ReportType, String> reportTypeLabels = {
 class Report {
   final String? id;
   final String groupId;
-  final String activityId;   
-  final String targetUserId;  
-  final String targetName;      
+  final String activityId; 
+  final String targetUserId;
+  final String targetName;
+  final String targetType; 
+  final String reporterUid;  
   final ReportType type;
   final String description;
   final DateTime createdAt;
+  final bool dismissed;
+
 
   Report({
     this.id,
@@ -36,9 +40,12 @@ class Report {
     required this.activityId,
     required this.targetUserId,
     required this.targetName,
+    required this.targetType,
+    required this.reporterUid,
     required this.type,
     required this.description,
     required this.createdAt,
+    this.dismissed = false,
   });
 
   Map<String, dynamic> toFirestore() {
@@ -47,9 +54,12 @@ class Report {
       'activityId': activityId,
       'targetUserId': targetUserId,
       'targetName': targetName,
+      'targetType': targetType,
+      'reporterUid': reporterUid,
       'type': type.name,
       'description': description,
       'createdAt': createdAt,
+      'dismissed': false,
     };
   }
 
@@ -60,12 +70,15 @@ class Report {
       activityId: data['activityId'] ?? '',
       targetUserId: data['targetUserId'] ?? '',
       targetName: data['targetName'] ?? '',
+      targetType: data['targetType'] ?? 'post',
+      reporterUid: data['reporterUid'] ?? '',
       type: ReportType.values.firstWhere(
         (e) => e.name == data['type'],
         orElse: () => ReportType.outros,
       ),
       description: data['description'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      dismissed: data['dismissed'] ?? false,
     );
   }
 }

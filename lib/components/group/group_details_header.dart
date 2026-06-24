@@ -19,6 +19,13 @@ class GroupDetailsHeader extends StatefulWidget {
   final VoidCallback? onLeave;
   final VoidCallback? onViewMembers;
 
+  /// Se não-nulo, exibe o ícone de denúncias (visível só para admins).
+  final VoidCallback? onViewReports;
+
+  /// Stream com a contagem de denúncias pendentes para o badge.
+  /// Passa null se o usuário não for admin (ícone não será exibido).
+  final Stream<int>? pendingReportsStream;
+
   const GroupDetailsHeader({
     super.key,
     required this.name,
@@ -27,6 +34,8 @@ class GroupDetailsHeader extends StatefulWidget {
     required this.points,
     this.onLeave,
     this.onViewMembers,
+    this.onViewReports,
+    this.pendingReportsStream,
   });
 
   @override
@@ -79,47 +88,130 @@ class _GroupDetailsHeaderState extends State<GroupDetailsHeader> {
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // ── Imagem de fundo ─────────────────────────────────────────────────
         SizedBox(
           height: 180,
           width: double.infinity,
           child: _bytes != null
-              ? Image.memory(_bytes!, fit: BoxFit.cover, cacheWidth: 1200, filterQuality: FilterQuality.low,
-                  errorBuilder: (context, error, stack) => Container(color: Colors.grey[300]))
+              ? Image.memory(
+                  _bytes!,
+                  fit: BoxFit.cover,
+                  cacheWidth: 1200,
+                  filterQuality: FilterQuality.low,
+                  errorBuilder: (_, __, ___) =>
+                      Container(color: Colors.grey[300]),
+                )
               : Container(color: Colors.grey[300]),
         ),
-        Container(height: 180, decoration: const BoxDecoration(color: Color.fromRGBO(0, 0, 0, 0.45))),
+        Container(
+          height: 180,
+          decoration:
+              const BoxDecoration(color: Color.fromRGBO(0, 0, 0, 0.45)),
+        ),
+
+        // ── Barra superior ──────────────────────────────────────────────────
         SafeArea(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              IconButton(icon: const Icon(Icons.arrow_back, color: Colors.white), onPressed: () => Navigator.pop(context)),
+              // Botão voltar
+              IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+
+              // Ícones do lado direito
               Row(
                 children: [
+                  // Ícone de denúncias (somente para admins)
+                  if (widget.onViewReports != null)
+                    StreamBuilder<int>(
+                      stream: widget.pendingReportsStream ??
+                          const Stream.empty(),
+                      builder: (ctx, snap) {
+                        final count = snap.data ?? 0;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.report_outlined,
+                                  color: Colors.white),
+                              tooltip: 'Denúncias',
+                              onPressed: widget.onViewReports,
+                            ),
+                            if (count > 0)
+                              Positioned(
+                                top: 6,
+                                right: 6,
+                                child: IgnorePointer(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(3),
+                                    decoration: const BoxDecoration(
+                                      color: AppColors.vermelho,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                        minWidth: 16, minHeight: 16),
+                                    child: Text(
+                                      count > 99 ? '99+' : '$count',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+
                   if (widget.onViewMembers != null)
-                    IconButton(icon: const Icon(Icons.people, color: Colors.white), onPressed: widget.onViewMembers),
+                    IconButton(
+                      icon: const Icon(Icons.people, color: Colors.white),
+                      onPressed: widget.onViewMembers,
+                    ),
                   if (widget.onLeave != null)
-                    IconButton(icon: const Icon(Icons.exit_to_app, color: Colors.white), onPressed: widget.onLeave),
+                    IconButton(
+                      icon: const Icon(Icons.exit_to_app,
+                          color: Colors.white),
+                      onPressed: widget.onLeave,
+                    ),
                 ],
               ),
             ],
           ),
         ),
+
+        // ── Título e stats ──────────────────────────────────────────────────
         Positioned(
-          left: 16, bottom: 30, right: 16,
+          left: 16,
+          bottom: 30,
+          right: 16,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.name, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+              Text(widget.name,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold)),
               const SizedBox(height: 6),
               Row(
                 children: [
                   const Icon(Icons.group, color: Colors.white, size: 14),
                   const SizedBox(width: 4),
-                  Text("${widget.people}", style: const TextStyle(color: Colors.white)),
+                  Text('${widget.people}',
+                      style: const TextStyle(color: Colors.white)),
                   const SizedBox(width: 12),
-                  const Icon(Icons.emoji_events, color: Colors.white, size: 14),
+                  const Icon(Icons.emoji_events,
+                      color: Colors.white, size: 14),
                   const SizedBox(width: 4),
-                  Text("${widget.points}", style: const TextStyle(color: Colors.white)),
+                  Text('${widget.points}',
+                      style: const TextStyle(color: Colors.white)),
                 ],
               ),
             ],

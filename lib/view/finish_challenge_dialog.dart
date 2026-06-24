@@ -1,5 +1,4 @@
-// lib/view/finish_challenge_dialog.dart
-import 'dart:convert'; // para base64Decode
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:naturats/components/challenge/challenge_impact_desc.dart';
@@ -30,6 +29,7 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
   bool _loadingGroups = false;
   Set<GroupModel> _selectedGroups = {};
   bool _isSharing = false;
+  bool _alreadyShared = false; // impede compartilhar mais de uma vez
 
   @override
   void initState() {
@@ -38,7 +38,6 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
   }
 
   Future<void> _loadGroups() async {
-
     setState(() => _loadingGroups = true);
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -53,29 +52,36 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
   }
 
   Future<void> _shareToGroups() async {
-  if (_selectedGroups.isEmpty) return;
+    if (_selectedGroups.isEmpty || _alreadyShared) return;
 
-  setState(() => _isSharing = true);
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
+    setState(() => _isSharing = true);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
 
-  int successCount = 0;
-  for (final group in _selectedGroups) {
-    try {
-      await _feedService.createActivity(
-        groupId: group.id,
-        title: 'Desafio Concluído: ${widget.challenge.title}',
-        description: '${user.displayName ?? 'Alguém'} completou o desafio "${widget.challenge.title}" e ganhou ${widget.points} pontos!',
-        missionType: widget.challenge.type.label,
-        imageBase64: null,
-      );
-      successCount++;
-    } catch (e) {
-      debugPrint('Erro ao compartilhar no grupo ${group.name}: $e');
+    int successCount = 0;
+    for (final group in _selectedGroups) {
+      try {
+        await _feedService.createActivity(
+          groupId: group.id,
+          title: 'Desafio Concluído: ${widget.challenge.title}',
+          description:
+              '${user.displayName ?? 'Alguém'} completou o desafio "${widget.challenge.title}" e ganhou ${widget.points} pontos!',
+          missionType: widget.challenge.type.label,
+          imageBase64: null,
+        );
+        successCount++;
+      } catch (e) {
+        debugPrint('Erro ao compartilhar no grupo ${group.name}: $e');
+      }
     }
-  }
 
-  if (mounted) {
+    if (!mounted) return;
+
+    setState(() {
+      _isSharing = false;
+      _alreadyShared = true; // bloqueia novos compartilhamentos
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -85,10 +91,10 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
         ),
       ),
     );
-  }
 
-  setState(() => _isSharing = false);
-}
+    // Fecha o dialog automaticamente após compartilhar
+    if (mounted) Navigator.pop(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,12 +121,15 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
             ),
             const SizedBox(height: 24),
             const Text(
-              "Muito bem!",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: Colors.black),
+              'Muito bem!',
+              style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black),
             ),
             const SizedBox(height: 10),
             Text(
-              "Ação registrada com sucesso.",
+              'Ação registrada com sucesso.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
             ),
@@ -142,7 +151,7 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
                       Icon(Icons.eco, color: Colors.green.shade700, size: 28),
                       const SizedBox(width: 8),
                       Text(
-                        "+${widget.points} pontos",
+                        '+${widget.points} pontos',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.w800,
@@ -167,36 +176,52 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green.shade700,
                   elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18)),
                 ),
                 child: const Text(
-                  "Continuar",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                  'Continuar',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white),
                 ),
               ),
             ),
             const SizedBox(height: 12),
 
-            // Botão "Compartilhar com grupo"
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: OutlinedButton(
-                onPressed: () => _showGroupPicker(context),
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: Colors.green.shade700),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                ),
-                child: Text(
-                  "Compartilhar com grupo",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.green.shade700,
+            // Botão "Compartilhar com grupo" — some após compartilhar
+            if (!_alreadyShared)
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: OutlinedButton(
+                  onPressed:
+                      _isSharing ? null : () => _showGroupPicker(context),
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: Colors.green.shade700),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(18)),
                   ),
+                  child: _isSharing
+                      ? SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.green.shade700,
+                          ),
+                        )
+                      : Text(
+                          'Compartilhar com grupo',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.green.shade700,
+                          ),
+                        ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -237,7 +262,6 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Barra de arraste
                   Container(
                     margin: const EdgeInsets.only(top: 12),
                     width: 40,
@@ -250,7 +274,8 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
                   const SizedBox(height: 12),
                   const Text(
                     'Compartilhar com',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   Flexible(
@@ -307,7 +332,8 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           group.name,
@@ -328,8 +354,12 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
                                     ),
                                   ),
                                   Icon(
-                                    isSelected ? Icons.check_circle : Icons.circle_outlined,
-                                    color: isSelected ? Colors.green : Colors.grey,
+                                    isSelected
+                                        ? Icons.check_circle
+                                        : Icons.circle_outlined,
+                                    color: isSelected
+                                        ? Colors.green
+                                        : Colors.grey,
                                   ),
                                 ],
                               ),
@@ -339,22 +369,20 @@ class _FinishChallengeDialogState extends State<FinishChallengeDialog> {
                       },
                     ),
                   ),
-                  // Botão de confirmar compartilhamento
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     child: SizedBox(
                       width: double.infinity,
                       height: 52,
                       child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          setState(() {
-                            _selectedGroups = localSelected;
-                          });
-                          if (_selectedGroups.isNotEmpty) {
-                            _shareToGroups();
-                          }
-                        },
+                        onPressed: localSelected.isEmpty
+                            ? null
+                            : () {
+                                Navigator.pop(ctx);
+                                setState(() => _selectedGroups = localSelected);
+                                _shareToGroups();
+                              },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green.shade700,
                           shape: RoundedRectangleBorder(

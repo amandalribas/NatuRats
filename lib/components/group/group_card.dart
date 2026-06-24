@@ -9,10 +9,12 @@ import 'package:naturats/utils/base64_image.dart';
 
 class GroupCard extends StatelessWidget {
   final GroupModel group;
+  final VoidCallback? onReturn;
 
   const GroupCard({
     super.key,
     required this.group,
+    this.onReturn,
   });
 
   @override
@@ -27,22 +29,22 @@ class GroupCard extends StatelessWidget {
           final userEmail = FirebaseAuth.instance.currentUser?.email;
 
           if (userEmail == null) {
-            Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => GroupJoinPage(group: group),
               ),
             );
+            onReturn?.call();
             return;
           }
 
-          final isMember = await groupRepository.isUserMember(group.id, userEmail);
+          final isMember =
+              await groupRepository.isUserMember(group.id, userEmail);
 
-          if (!context.mounted) {
-            return;
-          }
+          if (!context.mounted) return;
 
-          Navigator.push(
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => isMember
@@ -57,8 +59,9 @@ class GroupCard extends StatelessWidget {
                   : GroupJoinPage(group: group),
             ),
           );
-        },
 
+          onReturn?.call();
+        },
         child: Container(
           width: MediaQuery.of(context).size.width * 0.85,
           margin: const EdgeInsets.symmetric(vertical: 15),
@@ -73,7 +76,6 @@ class GroupCard extends StatelessWidget {
               ),
             ],
           ),
-
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -96,7 +98,6 @@ class GroupCard extends StatelessWidget {
                         child: const Icon(Icons.image_outlined),
                       ),
               ),
-
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
@@ -109,21 +110,19 @@ class GroupCard extends StatelessWidget {
                         fontSize: 18,
                       ),
                     ),
-
                     const SizedBox(height: 4),
-
                     Text(
                       group.description,
                       style: TextStyle(color: AppColors.borderCinza),
                     ),
-
                     const SizedBox(height: 16),
-
                     Row(
                       children: [
-                        _buildInfoItem(Icons.people_outline, group.totalPeople),
+                        _buildInfoItem(
+                            Icons.people_outline, group.totalPeople),
                         const SizedBox(width: 20),
-                        _buildInfoItem(Icons.emoji_events_outlined, group.totalPoints),
+                        _buildInfoItem(
+                            Icons.emoji_events_outlined, group.totalPoints),
                       ],
                     ),
                   ],
@@ -141,14 +140,8 @@ class GroupCard extends StatelessWidget {
       children: [
         Icon(icon, size: 16),
         const SizedBox(width: 6),
-        Text(
-          value.toString(),
-          style: const TextStyle(
-            fontSize: 12,
-          ),
-        ),
+        Text(value.toString(), style: const TextStyle(fontSize: 12)),
       ],
     );
   }
-
 }

@@ -139,7 +139,6 @@ class GroupRepository {
       );
     }
 
-    // Processa grupos privados onde o usuário é membro
     for (var doc in privateGroupsSnapshot) {
       final infoSnapshot = await doc.reference
           .collection('info')
@@ -147,7 +146,7 @@ class GroupRepository {
           .get();
       final info = infoSnapshot.data() ?? {};
 
-      // Conta número de membros
+  
       final memberDoc = await doc.reference
           .collection('members')
           .doc('members')
@@ -155,10 +154,6 @@ class GroupRepository {
       final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
       final groupLength = emails.length;
       final totalPoints = await calculateGroupPoints(emails);
-
-      debugPrint(
-        '🟢 Grupo PRIVADO: ${info['title']} - Membros: $groupLength - Pontos: $totalPoints',
-      );
 
       visibleGroups.add(
         GroupModel(
@@ -172,8 +167,6 @@ class GroupRepository {
       );
     }
 
-    debugPrint('📊 Total de grupos visíveis: ${visibleGroups.length}');
-
     return visibleGroups;
   }
 
@@ -181,7 +174,6 @@ class GroupRepository {
     final firestore = FirebaseFirestore.instance;
     final allGroupsSnapshot = await firestore.collection('groups').get();
   
-    // 1. Dispara a leitura da subcoleção 'members' de TODOS os grupos em paralelo
     final membersSnapshots = await Future.wait(
       allGroupsSnapshot.docs.map((doc) => doc.reference.collection('members').doc('members').get())
     );
@@ -194,8 +186,7 @@ class GroupRepository {
   
       if (memberDoc.exists) {
         final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
-        
-        // Se o usuário pertence ao grupo, agenda a busca detalhada
+     
         if (emails.contains(userEmail)) {
           tasks.add(() async {
             final infoSnapshot = await groupDoc.reference.collection('info').doc('info').get();
@@ -215,7 +206,7 @@ class GroupRepository {
       }
     }
   
-    // 2. Executa todo o processamento de dados e pontos em paralelo
+  
     final results = await Future.wait(tasks);
     return results.whereType<GroupModel>().toList();
   }
@@ -223,13 +214,13 @@ class GroupRepository {
   Future<List<GroupModel>> fetchGeneralGroupsOnly(String userEmail) async {
     final firestore = FirebaseFirestore.instance;
     
-    // Busca apenas os grupos públicos de forma direta
+
     final publicGroupsSnapshot = await firestore
         .collection('groups')
         .where('public', isEqualTo: true)
         .get();
   
-    // 1. Dispara a leitura de membros de todos os públicos em paralelo
+
     final membersSnapshots = await Future.wait(
       publicGroupsSnapshot.docs.map((doc) => doc.reference.collection('members').doc('members').get())
     );
@@ -241,7 +232,7 @@ class GroupRepository {
       final memberDoc = membersSnapshots[i];
       final emails = memberDoc.data()?['emails'] as List<dynamic>? ?? [];
   
-      // Se o usuário NÃO faz parte do grupo público, ele vai para a aba Geral
+
       if (!emails.contains(userEmail)) {
         tasks.add(() async {
           final infoSnapshot = await groupDoc.reference.collection('info').doc('info').get();
@@ -260,7 +251,7 @@ class GroupRepository {
       }
     }
   
-    // 2. Executa em paralelo o cálculo de pontos e info de todos os grupos gerais
+
     final results = await Future.wait(tasks);
     return results.whereType<GroupModel>().toList();
   }
@@ -268,7 +259,7 @@ class GroupRepository {
   Future<int> calculateGroupPoints(List<dynamic> emails) async {
     final firestore = FirebaseFirestore.instance;
 
-    // Busca os dados de todos os membros do grupo simultaneamente
+
     final userQueries = await Future.wait(
       emails.map((email) => firestore.collection('users').where('email', isEqualTo: email).limit(1).get())
     );
@@ -471,7 +462,7 @@ class GroupRepository {
     return members;
   }
 
-  // ══════════════ ADMIN ══════════════
+
   Future<List<String>> getGroupAdmins(String groupId) async {
     final doc = await FirebaseFirestore.instance
         .collection('groups')

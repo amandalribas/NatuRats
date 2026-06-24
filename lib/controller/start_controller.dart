@@ -4,8 +4,6 @@ import 'package:naturats/view/login_page.dart';
 import 'package:naturats/view/splash_page.dart';
 import 'package:naturats/view/tabs_page.dart';
 import 'package:provider/provider.dart';
-import 'package:naturats/repository/user_repository.dart';
-import 'package:naturats/view/tabs_page.dart';
 
 class RedirectionData {
   bool signedIn;
@@ -54,7 +52,6 @@ class _StartPageState extends State<StartController> {
     return LoginPage();
   }
 
-  // Obtém o repositório do usuário
   final userRepo = context.read<UserRepository>();
 
   return FutureBuilder<bool>(
