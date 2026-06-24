@@ -33,8 +33,13 @@ class _LoginView extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                Image(
+                  image: AssetImage('assets/logo.png'),
+                  width: 200,
+                  height: 200,
+                ),
                 const Text(
-                  "Bem-vindo!",
+                  "NatuRats",
                   style: TextStyle(
                     color: AppColors.branco,
                     fontSize: 50,

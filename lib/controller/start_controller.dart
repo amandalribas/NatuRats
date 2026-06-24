@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:naturats/repository/user_repository.dart';
 import 'package:naturats/view/login_page.dart';
 import 'package:naturats/view/splash_page.dart';
 import 'package:naturats/view/tabs_page.dart';
-import 'package:provider/provider.dart';
 
 class RedirectionData {
   bool signedIn;
@@ -23,46 +23,60 @@ class StartController extends StatefulWidget {
 }
 
 class _StartPageState extends State<StartController> {
+  late Future<void> _minimumSplashTime;
+
   @override
   void initState() {
     super.initState();
+
+    _minimumSplashTime = Future.delayed(
+      const Duration(seconds: 2),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<UserRepository>(
-      builder: (context, userRepository, child) {
-        RedirectionData redirectionData = RedirectionData();
-        redirectionData.signedIn = userRepository.isSignedIn;
-        redirectionData.isLoading = userRepository.isLoading;
+    return FutureBuilder(
+      future: _minimumSplashTime,
+      builder: (context, timerSnapshot) {
+        if (timerSnapshot.connectionState != ConnectionState.done) {
+          return const SplashPage();
+        }
 
-        return Builder(
-          builder: (c) => handleRedirection(redirectionData),
+        return Consumer<UserRepository>(
+          builder: (context, userRepository, child) {
+            RedirectionData redirectionData = RedirectionData(
+              signedIn: userRepository.isSignedIn,
+              isLoading: userRepository.isLoading,
+            );
+
+            return handleRedirection(redirectionData);
+          },
         );
       },
     );
   }
 
   Widget handleRedirection(RedirectionData redirectionData) {
-  if (redirectionData.isLoading) {
-    return SplashPage();
-  }
+    if (redirectionData.isLoading) {
+      return const SplashPage();
+    }
 
-  if (!redirectionData.signedIn) {
-    return LoginPage();
-  }
+    if (!redirectionData.signedIn) {
+      return const LoginPage();
+    }
 
   final userRepo = context.read<UserRepository>();
 
-  return FutureBuilder<bool>(
-    future: userRepo.isNewUser(),
-    builder: (context, snapshot) {
-      if (snapshot.connectionState != ConnectionState.done) {
-        return const Center(child: CircularProgressIndicator());
-      }
-      final showTutorial = snapshot.data ?? false;
-      return TabsPage(showTutorial: showTutorial);
-    },
-  );
-}
+    return FutureBuilder<bool>(
+      future: userRepo.isNewUser(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final showTutorial = snapshot.data ?? false;
+        return TabsPage(showTutorial: showTutorial);
+      },
+    );
+  }
 }
